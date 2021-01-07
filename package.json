@@ -1,0 +1,71 @@
+{
+  "name": "lok-3d-viewer",
+  "description": "3D Character Viewer Mixamo",
+  "author": "wonglok",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wonglok/lok-3d-viewer.git"
+  },
+  "private": false,
+  "dependencies": {
+    "electron-is-dev": "1.2.0",
+    "electron-log": "^4.2.1",
+    "update-electron-app": "^1.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "5.2.0",
+    "cross-env": "7.0.2",
+    "electron": "9.0.4",
+    "electron-builder": "^22.7.0",
+    "prettier": "^2.0.5",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.4.1",
+    "wait-on": "5.0.1"
+  },
+  "build": {
+    "asar": true,
+    "productName": "MyApp",
+    "appId": "com.tony.MyApp",
+    "mac": {
+      "icon": "assets/bin/icon.icns",
+      "files": [
+        "build/**/*",
+        "!docs/",
+        ".env",
+        "!scripts/"
+      ]
+    },
+    "win": {
+      "icon": "assets/bin/icon.ico"
+    },
+    "publish": {
+      "provider": "github"
+    }
+  },
+  "main": "public/electron.js",
+  "homepage": "./",
+  "scripts": {
+    "react-start": "react-scripts start",
+    "react-build": "react-scripts build",
+    "react-test": "react-scripts test --env=jsdom",
+    "react-eject": "react-scripts eject",
+    "electron-build": "electron-builder",
+    "dev": "concurrently \"cross-env BROWSER=none yarn react-start\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "yarn react-build && yarn electron-build",
+    "deploy": "yarn react-build && yarn electron-build --mac --publish always"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
