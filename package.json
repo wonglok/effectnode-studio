@@ -9,8 +9,15 @@
   },
   "private": false,
   "dependencies": {
+    "@craco/craco": "^6.0.0",
+    "@tailwindcss/postcss7-compat": "^2.0.2",
+    "autoprefixer": "^9",
+    "classnames": "^2.2.6",
     "electron-is-dev": "1.2.0",
     "electron-log": "^4.2.1",
+    "open-in-editor": "^2.2.0",
+    "postcss": "^7",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
     "update-electron-app": "^1.2.0"
   },
   "devDependencies": {
@@ -26,8 +33,16 @@
   },
   "build": {
     "asar": true,
-    "productName": "MyApp",
-    "appId": "com.tony.MyApp",
+    "fileAssociations": [
+      {
+        "ext": "glb",
+        "name": "GLB 3D File",
+        "role": "Viewer",
+        "isPackage": false
+      }
+    ],
+    "productName": "EffectNodeApp",
+    "appId": "com.wonglok.EffectNodeApp",
     "mac": {
       "icon": "assets/bin/icon.icns",
       "files": [
@@ -47,6 +62,9 @@
   "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
+    "c-start": "craco start",
+    "c-build": "craco build",
+    "c-test": "craco test",
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
     "react-test": "react-scripts test --env=jsdom",

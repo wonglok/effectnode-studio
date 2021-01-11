@@ -1,21 +1,20 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { DropZone } from './compos/DropZone';
 
-const {app} = window.require('electron').remote;
+// const { ipcRenderer } = window.require('electron')
+// const { app } = window.require('electron').remote
+// ipcRenderer.on('asynchronous-reply', (event, arg) => {
+//   console.log(arg) // prints "pong"
+// })
+// ipcRenderer.send('asynchronous-message', 'ping')
 
-export default function App() {
+// ipcRenderer.send('open', 'ping')
 
-    return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>React + Electron = <span role="img" aria-label="love">😍</span></h2>
-        </div>
-        <p className="App-intro">
-          Version: <b>{app.getVersion()}</b>
-        </p>
-      </div>
-    );
-
+export default function App () {
+  return (
+    <div className="full">
+      <DropZone className="full"></DropZone>
+    </div>
+  );
 }
+

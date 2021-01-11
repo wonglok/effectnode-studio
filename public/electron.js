@@ -7,10 +7,10 @@ const isDev = require("electron-is-dev");
 
 let mainWindow;
 
-require("update-electron-app")({
-  repo: "alagrede/react-electron-example",
-  updateInterval: "1 hour"
-});
+// require("update-electron-app")({
+//   repo: "alagrede/react-electron-example",
+//   updateInterval: "1 hour"
+// });
 
 function createWindow() {
   mainWindow = new BrowserWindow({ width: 900, height: 680, webPreferences: { nodeIntegration: true }});
@@ -37,3 +37,28 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+const { ipcMain } = require('electron')
+ipcMain.on('asynchronous-message', (event, arg) => {
+  console.log(arg) // prints "ping"
+  event.reply('asynchronous-reply', 'pong')
+})
+
+ipcMain.on('open', () => {
+  // var openInEditor = require('open-in-editor');
+  // var editor = openInEditor.configure({
+  //   // options
+  //   editor: 'code',
+  //   pattern: '-r -g {filename}:{line}:{column}'
+  // }, function(err) {
+  //   console.error('Something went wrong: ' + err);
+  // });
+
+  // // editor.open(__dirname'path/to/file.js:3:10')
+  // editor.open(`${__dirname}/electron.js:47:7`)
+  // .then(function() {
+  //   console.log('Success!');
+  // }, function(err) {
+  //   console.error('Something went wrong: ' + err);
+  // });
+})
