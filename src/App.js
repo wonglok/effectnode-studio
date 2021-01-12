@@ -39,14 +39,14 @@ function Topic() {
 function LandingPage () {
   return <div>
     <NavBar></NavBar>
-    LandingPage
+    <div>LandingPage</div>
   </div>
 }
 
 function AboutPage () {
   return <div>
     <NavBar></NavBar>
-    AboutPage
+    <div>AboutPage</div>
   </div>
 }
 
@@ -55,11 +55,11 @@ export default function App () {
     <div className="full">
       <Router>
         <Switch>
-          <Route path={'/about'}>
-            <AboutPage></AboutPage>
-          </Route>
           <Route path={`/topic/:topicId`}>
             <Topic></Topic>
+          </Route>
+          <Route path={'/about'}>
+            <AboutPage></AboutPage>
           </Route>
           <Route path={'/'}>
             <LandingPage></LandingPage>
