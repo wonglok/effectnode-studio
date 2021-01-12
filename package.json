@@ -17,14 +17,20 @@
     "electron-log": "^4.2.1",
     "open-in-editor": "^2.2.0",
     "postcss": "^7",
+    "react-router-dom": "^5.2.0",
+    "react-three-fiber": "^5.3.12",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
-    "update-electron-app": "^1.2.0"
+    "three": "^0.124.0",
+    "update-electron-app": "^1.2.0",
+    "zustand": "^3.3.1"
   },
   "devDependencies": {
     "concurrently": "5.2.0",
     "cross-env": "7.0.2",
     "electron": "9.0.4",
     "electron-builder": "^22.7.0",
+    "eslint-plugin-react": "^7.22.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "prettier": "^2.0.5",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
