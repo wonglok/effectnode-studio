@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useWinsNamed, useAppsNamed } from './useWins.js'
+import React, { useContext, useEffect, useState } from 'react'
 import { useDrag } from 'react-use-gesture'
 import slugify from 'slugify'
 import { MainEditor, PreviewBox } from './BuiltInWindows.js'
 import { ProjectContext } from '../ProjectPage.js'
-
+/* eslint-disable react-hooks/exhaustive-deps */
 export function WindowTemplate ({ children, toolBarClassName = 'bg-green-400', initVal, showToolBtn = true, onChange = () => {} }) {
   const [rect, set] = useState(initVal || { x: 0, y: 0, w: 100, h: 100 })
   const toolbar = useDrag(({ down, delta: [dx, dy] }) => {

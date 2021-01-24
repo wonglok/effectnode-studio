@@ -1,13 +1,14 @@
-import React, { useRef } from 'react'
-import { useEffect, useState, useMemo } from "react"
+import React, {  } from 'react'
+import { useEffect, useState } from "react"
 import { Layout } from "../pages-content/happy-again/NavBar"
 // import { Modal } from '../pages-content/modal/Modal'
-import { DropZone } from '../compos/DropZone';
+// import { DropZone } from '../compos/DropZone';
 import { useProjectRoots } from '../AppData'
-import { useHistory } from 'react-router-dom'
+// import { useHistory } from 'react-router-dom'
 import { createFiles } from './parcel/parcel.js'
 
 function ThankYouCard ({ children, text, className, onClick }) {
+  // eslint-disable-next-line
   return <div className={'mb-3 p-3' + ' ' + className || ''} onClick={onClick}>
     <div style={{ border: '1px solid #F3C978', borderRadius: '10px', width: '300px', height: '400px', margin: '20px auto' }}>
       {children}
@@ -20,10 +21,9 @@ function ThankYouCard ({ children, text, className, onClick }) {
 
 
 export const RecentItem = ({ doc, alt }) => {
-  let history = useHistory()
   let removeDoc = useProjectRoots(s => s.removeDoc)
   let openDoc = ({ doc }) => {
-    history.push(`/project?url=${encodeURIComponent(doc.path)}`)
+    window.location.assign(`/project?url=${encodeURIComponent(doc.path)}`)
   }
 
   return <div className={"px-3 m-3 flex cursor-pointer py-2 text-xs bg-gray-100 bg-gradient-to-tr text-white rounded-2xl " + (alt ? `  from-purple-400 to-red-500 ` : ` from-blue-400  to-green-500 `)}>
@@ -92,7 +92,7 @@ export function IntroPage () {
     const existsSync = window.require('fs').existsSync
     const { dialog } = window.require('electron').remote;
     var promise = await dialog.showOpenDialog({
-      properties: ['openDirectory'],
+      properties: ['openDirectory', 'createDirectory'],
       createDirectory: true
     })
 
@@ -112,10 +112,14 @@ export function IntroPage () {
     await checkBeforeCreateProject({ files })
   }
 
-  let createProjectFiles = ({ folder }) => {
-    createFiles({ folder })
+  let openProject = ({ folder }) => {
     window.location.assign(`/project?url=${encodeURIComponent(folder.path)}`)
     console.log('open project')
+  }
+
+  let createProjectFiles = ({ folder }) => {
+    createFiles({ folder })
+    openProject({ folder })
   }
 
   let checkBeforeCreateProject = async ({ files }) => {
@@ -148,6 +152,34 @@ export function IntroPage () {
     }
   }
 
+  let checkProjectHasPackage = async ({ firstFolder }) => {
+    const fs = window.require('fs');
+    const path = window.require('path')
+
+    const dir = fs.opendirSync(firstFolder.path);
+    const infos = []
+    for await (const dirEntry of dir) {
+      console.log(dirEntry.name);
+      infos.push({
+        name: dirEntry.name,
+        isDirectory: dirEntry.isDirectory(),
+        isFile: dirEntry.isFile(),
+        path: path.join(firstFolder.path, dirEntry.name)
+      })
+    }
+
+    const vizfiles = infos.filter(info => {
+      return info.name.indexOf('package.json') !== 0
+    })
+
+    if (vizfiles.length >= 1) {
+      dropItem({ files: [firstFolder] })
+      openProject({ folder: firstFolder })
+    } else {
+      window.alert(`This folder isn't initialised.`)
+    }
+  }
+
   let openFolder = async () => {
     const lstatSync = window.require('fs').lstatSync
     const existsSync = window.require('fs').existsSync
@@ -168,7 +200,10 @@ export function IntroPage () {
       file.isDirectory = isDirectory
     })
 
-    dropItem({ files })
+    let firstFolder = files.filter(e => e.isDirectory)[0]
+    if (firstFolder) {
+      checkProjectHasPackage({ firstFolder })
+    }
   }
 
   let openNewWindow = () => {
@@ -188,17 +223,19 @@ export function IntroPage () {
           <img src={require('./img/add.svg')} alt="add" />
         </div>
       </ThankYouCard>
-      <ThankYouCard onClick={openFolder} text={'Browse Project Folder'} className={'cursor-pointer  select-none'}>
+
+      <ThankYouCard onClick={openFolder} text={'Browse and Open Project'} className={'cursor-pointer  select-none'}>
         <div className={'h-full w-full flex justify-center items-center'}>
           <img src={require('./img/folder.svg')} className={'scale-150 transform'} alt="Open" />
         </div>
       </ThankYouCard>
-      <ThankYouCard text={'Drop Project Folder'} className={'select-none'}>
+
+      {/* <ThankYouCard text={'Drop Project Folder'} className={'select-none'}>
         <div className={'h-full w-full flex justify-center items-center'}>
           <DropZone onFiles={({ files }) => { dropItem({ files }) }}>
           </DropZone>
         </div>
-      </ThankYouCard>
+      </ThankYouCard> */}
       <ThankYouCard onClick={openNewWindow} text={'Open New Window'} className={'cursor-pointer select-none'}>
         <div className={'h-full w-full flex justify-center items-center'}>
           <img src={require('./img/clone.svg')} className={'scale-150 transform'} alt="Open" />

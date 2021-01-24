@@ -1,6 +1,5 @@
 import React from 'react'
 import { useEffect, useState } from "react"
-import { Link } from 'react-router-dom'
 // import Link from 'next/link'
 
 export function Layout ({ title, children }) {
@@ -15,6 +14,10 @@ export function Layout ({ title, children }) {
     <NavBar title={title}></NavBar>
     {children}
   </div>
+}
+
+function Link ({ to, style, children }) {
+  return <a style={style} href={to}>{children}</a>
 }
 
 export function NavBar ({ title = '' }) {

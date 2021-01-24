@@ -1,13 +1,16 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { runSession } from '../parcel/parcel'
 import { ProjectContext } from '../ProjectPage'
+/* eslint-disable react-hooks/exhaustive-deps */
 
 export const MainEditor = () => {
-  return <div>main editro</div>
+  return <div>{JSON.stringify({
+    a: 12312, b: 123
+  })}</div>
 }
 
 export const PreviewBox = () => {
-  const [src, setSRC] = useState()
+  const [src, setSrc] = useState('about:blank')
   const webview = useRef()
   const scroller = useRef()
   const { url } = useContext(ProjectContext)
@@ -15,7 +18,10 @@ export const PreviewBox = () => {
 
   useEffect(() => {
     let logger = (e) => {
-      console.log('[GUEST]:', e)
+      if (!webview.current) {
+        return
+      }
+      console.log('[GUEST]:', e.message)
       setLogs(s => [...s, JSON.stringify(e.message)])
       scroller.current.scrollTop = scroller.current.scrollHeight
     }
@@ -23,16 +29,11 @@ export const PreviewBox = () => {
     return () => {
       webview.current.removeEventListener('console-message', logger)
     }
-  }, [webview.current])
-
+  }, [])
 
   const startSession = () => {
     let onReload = ({ port, url }) => {
-
-      setSRC('about:blank')
-      setTimeout(() => {
-        setSRC(url)
-      }, 10)
+      setSrc(url)
     }
 
     try {
@@ -41,14 +42,17 @@ export const PreviewBox = () => {
       console.log(e)
     }
   }
+
   useEffect(() => {
-    startSession({})
+    startSession()
   }, [])
 
+  //
+
   return <div className={'w-full h-full'}>
-    <webview className={'w-full'} style={{ height: 'calc(100% - 200px)' }} ref={webview} src={src}></webview>
-    <div className={'w-full overflow-scroll'} ref={scroller} style={{ height: `200px` }}>
-      {logs.map((log, li) => <div key={'aa' + li} className={'p-1 my-1 border bg-yellow-400'}>{log}</div>)}
+    <webview className={'w-full'} style={{ height: 'calc(100% - 250px)' }} src={src} ref={webview}></webview>
+    <div className={'w-full overflow-scroll'} ref={scroller} style={{ height: `250px` }}>
+      {logs.map((log, li) => <div key={'aa' + li} className={'p-1 mt-1 text-sm border bg-yellow-200'}>{log}</div>)}
     </div>
   </div>
 }

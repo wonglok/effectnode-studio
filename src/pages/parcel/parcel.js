@@ -47,6 +47,7 @@ function writeHTML ({ folder }) {
 function makeFolders ({ folder }) {
   fs.mkdirSync(folder.path + '/dist', { recursive: true })
   fs.mkdirSync(folder.path + '/src', { recursive: true })
+  fs.mkdirSync(folder.path + '/src/assets', { recursive: true })
   fs.mkdirSync(folder.path + '/src/js', { recursive: true })
   fs.mkdirSync(folder.path + '/src/js/boxes', { recursive: true })
 }
@@ -172,8 +173,9 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
     autoInstall: true, // Enable or disable auto install of missing dependencies found during bundling
   };
 
+  let ready = false
   try {
-    let port = await getPort({port: 3333})
+    let port = await getPort({ port: 3333 })
     // Initializes a bundler using the entrypoint location and options provided
     const bundler = new Bundler(entryFiles, options);
     bundler.on('buildStart', entry => {
@@ -184,7 +186,10 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
     bundler.on('buildEnd', () => {
       // Do something...
       console.log('buildEnd')
-      onReload({ port, url: `http://localhost:${port}` })
+
+      if (ready) {
+        onReload({ port, url: `http://localhost:${port}` })
+      }
     });
 
     bundler.on('buildError', (error) => {
@@ -212,8 +217,40 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
 
     app.listen(port, () => {
       console.log('http://localhost:' + port)
+      onReload({ port, url: `http://localhost:${port}` })
+      ready = true
     })
   } catch (e) {
     console.log(e)
   }
 }
+
+export function watchFiles ({ projectRoot, onTree }) {
+  const chokidar = window.require('chokidar');
+  const path = window.require('path');
+
+  const map = new Map()
+  // One-liner for current directory
+  let watcher = chokidar.watch(path.join(projectRoot, '/src/js/boxes'))
+  .on('add', (path) => {
+    map.set(path, path)
+    onTree({ tree: map })
+  })
+  .on('change', (path) => {
+    map.set(path, path)
+    onTree({ tree: map })
+  })
+  .on('unlink', (path) => {
+    map.delete(path, path)
+    onTree({ tree: map })
+  })
+  .on('all', (event, path) => {
+    console.log(event, path);
+  });
+
+  return () => {
+    watcher.close()
+  }
+}
+
+//
