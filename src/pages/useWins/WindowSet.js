@@ -165,7 +165,7 @@ export function TaskBarSet () {
     relayoutPreview()
   }
   let relayoutPreview = () => {
-    resetWindow('Preview Box', { w: window.innerWidth * 0.2, h: window.innerHeight * 0.5, x: window.innerWidth - window.innerWidth * 0.2 - 10, y: 10 })
+    resetWindow('Preview Box', { w: window.innerWidth * 0.3, h: window.innerHeight - 20 - 130, x: window.innerWidth - window.innerWidth * 0.3 - 10, y: 10 })
   }
   let relayoutEditor = () => {
     resetWindow('Main Editor', { x: 10, y: 10, w: window.innerWidth * 0.3333, h: window.innerHeight * 0.7 })

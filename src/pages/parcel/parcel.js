@@ -1,20 +1,38 @@
 const getPort = window.require('get-port');
 const fs = window.require('fs')
 
-function makeHTMLCode () {
+export function getNonce() {
+	let text = '';
+	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	for (let i = 0; i < 32; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+}
+
+function makeHTMLCode ({ cspSource, nonce }) {
   return /* html */`<!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src ${cspSource} blob:; img-src ${cspSource}; style-src 'nonce-${nonce}' ${cspSource}; script-src 'nonce-${nonce}';">
     <title>EffectNode Project</title>
-    <style>
+    <style nonce="${nonce}" >
+      body,html,.full, #root{
+        width: 100%;
+        height: 100%;
+      }
+      body,html{
+        margin: 0px;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
-    <script src="./js/entry.js"></script>
-    <script>
+    <script nonce="${nonce}" src="./js/entry.js"></script>
+    <script nonce="${nonce}">
       console.log(window.MyCanvas.default({ mounter: document.querySelector('#root') }))
     </script>
   </body>
@@ -22,7 +40,7 @@ function makeHTMLCode () {
 }
 
 function writeHTML ({ folder }) {
-  const indexHTML = makeHTMLCode()
+  const indexHTML = makeHTMLCode({ nonce: getNonce(), cspSource: 'http://localhost:3333' })
   fs.writeFileSync(folder.path + '/dist/index.html', indexHTML, 'utf8')
 }
 
@@ -156,7 +174,7 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
     var app = express()
 
     app.get('/', (req, res) => {
-      res.send(makeHTMLCode())
+      res.send(makeHTMLCode({ nonce: getNonce(), cspSource: 'http://localhost:' + port }))
     })
 
     app.use(express.static(path.join(projectRoot, './dist/')))
