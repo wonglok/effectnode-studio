@@ -127,7 +127,7 @@ export function BuiltInWindow ({ name, pos = {}, children }) {
   }
 
   return <>
-    {doc && !doc.hidden && <WindowTemplate showToolBtn={false} toolBarClassName={'bg-gradient-to-r from-green-600 via-green-400 to-blue-600 text-white'} initVal={doc} onChange={onChange}>
+    {doc && !doc.hidden && <WindowTemplate showToolBtn={false} toolBarClassName={'bg-gradient-to-r from-green-600 via-green-400 to-green-800 text-white'} initVal={doc} onChange={onChange}>
       {children}
     </WindowTemplate>}
   </>
@@ -138,7 +138,7 @@ export function WindowSet () {
     <BuiltInWindow name="Main Editor" pos={{ x: 10, y: 10, w: window.innerWidth * 0.3333, h: window.innerHeight * 0.7 }}>
       <MainEditor></MainEditor>
     </BuiltInWindow>
-    <BuiltInWindow name="Preview Box" pos={{ w: 400, h: 400, x: window.innerWidth - window.innerWidth * 0.2 - 10, y: 10 }}>
+    <BuiltInWindow name="Preview Box" pos={{ w: window.innerWidth * 0.3, h: window.innerHeight - 20 - 130, x: window.innerWidth - window.innerWidth * 0.3 - 10, y: 10 }}>
       <PreviewBox></PreviewBox>
     </BuiltInWindow>
   </div>
@@ -164,11 +164,12 @@ export function TaskBarSet () {
     relayoutEditor()
     relayoutPreview()
   }
-  let relayoutPreview = () => {
-    resetWindow('Preview Box', { w: window.innerWidth * 0.3, h: window.innerHeight - 20 - 130, x: window.innerWidth - window.innerWidth * 0.3 - 10, y: 10 })
-  }
+
   let relayoutEditor = () => {
     resetWindow('Main Editor', { x: 10, y: 10, w: window.innerWidth * 0.3333, h: window.innerHeight * 0.7 })
+  }
+  let relayoutPreview = () => {
+    resetWindow('Preview Box', { w: window.innerWidth * 0.3, h: window.innerHeight - 20 - 130, x: window.innerWidth - window.innerWidth * 0.3 - 10, y: 10 })
   }
 
   return <div className={'absolute bottom-0 left-0 w-full bg-opacity-25 bg-black h-12 p-2'}>

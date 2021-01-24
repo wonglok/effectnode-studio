@@ -24,8 +24,8 @@ export const RecentItem = ({ doc, alt }) => {
   let removeDoc = useProjectRoots(s => s.removeDoc)
   let openDoc = ({ doc }) => {
     history.push(`/project?url=${encodeURIComponent(doc.path)}`)
-    console.log()
   }
+
   return <div className={"px-3 m-3 flex cursor-pointer py-2 text-xs bg-gray-100 bg-gradient-to-tr text-white rounded-2xl " + (alt ? `  from-purple-400 to-red-500 ` : ` from-blue-400  to-green-500 `)}>
     <div className="flex flex-col justify-center">
       <div className="overflow-x-scroll inline-flex items-center">{doc.title}</div>
@@ -107,12 +107,14 @@ export function IntroPage () {
       file.isDirectory = isDirectory
     })
 
+    dropItem({ files })
+
     await checkBeforeCreateProject({ files })
   }
 
   let createProjectFiles = ({ folder }) => {
     createFiles({ folder })
-
+    window.location.assign(`/project?url=${encodeURIComponent(folder.path)}`)
     console.log('open project')
   }
 

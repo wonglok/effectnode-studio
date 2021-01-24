@@ -52,14 +52,43 @@ function makeFolders ({ folder }) {
 }
 
 function makeEntryJS ({ folder }) {
-  let codeJS = /* jsx */`
-import * as All from './boxes/*.js'
-for (let kn in All) {
-  All[kn]();
+  let codeJS = /* js */`import all from './boxes/*.js'
+
+function entry ({ mounter }) {
+  for (let kn in all) {
+    console.log(kn, all[kn].default())
+  }
+  mounter.innerHTML = '123'
 }
+
+export default entry
+export { entry }
   `
   fs.writeFileSync(folder.path + '/src/js/entry.js', codeJS, 'utf8')
 }
+
+function makeBoxJSa ({ folder }) {
+  let codeJS = /* jsx */`
+  import moment from 'moment'
+export default () => {
+  console.log('core.js', moment().calendar())
+  return moment().calendar() + 'core'
+}
+  `
+  fs.writeFileSync(folder.path + '/src/js/boxes/core.js', codeJS, 'utf8')
+}
+
+function makeBoxJSb ({ folder }) {
+  let codeJS = /* jsx */`
+import moment from 'moment'
+export default () => {
+  console.log('apple.js', moment().calendar())
+  return moment().calendar() + 'apple'
+}
+  `
+  fs.writeFileSync(folder.path + '/src/js/boxes/apple.js', codeJS, 'utf8')
+}
+
 
 function makePackage ({ folder }) {
   let packageJSON = JSON.stringify({
@@ -82,6 +111,8 @@ export function createFiles ({ folder }) {
   makeFolders({ folder })
   writeHTML({ folder })
   makeEntryJS({ folder })
+  makeBoxJSa({ folder })
+  makeBoxJSb({ folder })
   makePackage({ folder })
 }
 

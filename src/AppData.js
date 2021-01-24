@@ -32,6 +32,7 @@ export const useProjectRoots = create((set, get) => {
       return await rootStorage.getItem(_id)
     },
     removeDoc: async ({ doc }) => {
+      set({ refresh: Math.random() })
       let res = await rootStorage.removeItem(doc._id)
       return res
     },
