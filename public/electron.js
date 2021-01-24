@@ -4,6 +4,7 @@ const BrowserWindow = electron.BrowserWindow;
 
 const path = require("path");
 const isDev = require("electron-is-dev");
+const { ipcMain } = require('electron')
 
 let mainWindow;
 
@@ -11,6 +12,28 @@ let mainWindow;
 //   repo: "alagrede/react-electron-example",
 //   updateInterval: "1 hour"
 // });
+
+function createNewWindow () {
+  let projectWindow = new BrowserWindow({
+    width: 900,
+    height: 680,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  projectWindow.loadURL(
+    isDev
+      ? "http://localhost:3000"
+      : `file://${path.join(__dirname, "../build/index.html")}`
+  );
+  projectWindow.maximize()
+}
+
+ipcMain.on('open-window', () => {
+  createNewWindow()
+})
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -48,7 +71,6 @@ app.on("activate", () => {
   }
 });
 
-const { ipcMain } = require('electron')
 ipcMain.on('asynchronous-message', (event, arg) => {
   console.log(arg) // prints "ping"
   event.reply('asynchronous-reply', 'pong')

@@ -5,9 +5,9 @@ const lstatSync = window.require('fs').lstatSync
 const existsSync = window.require('fs').existsSync
 const { dialog } = window.require('electron').remote;
 
-export function DropZone ({ onFiles = () => {} }) {
+export function DropZone ({ children, onFiles = () => {} }) {
   const drop = useRef()
-  const [message, setMessage] = useState('Drop Folder Here or Click to Select Folder')
+  const [message, setMessage] = useState('')
   const [mode, setMode] = useState('ready')
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function DropZone ({ onFiles = () => {} }) {
       },
       dragenter: (event) => {
         console.log('File is in the Drop Space');
-        setMessage('Drop Folder Here or Click to Select Folder');
+        setMessage('');
       },
       dragleave: (event) => {
         console.log('File has left the Drop Space');
@@ -70,7 +70,8 @@ export function DropZone ({ onFiles = () => {} }) {
 
   let openClutter = async () => {
     var promise = await dialog.showOpenDialog({
-        properties: ['openDirectory']
+        properties: ['openDirectory'],
+        createDirectory: true
     });
 
     let files = [{
@@ -87,10 +88,12 @@ export function DropZone ({ onFiles = () => {} }) {
     setMode(`dropped`)
     onFiles({ files })
   }
-
-  return <div ref={drop} onClick={() => { openClutter() }} className={' cursor-pointer h-full w-full bg-gray-100 flex justify-center items-center ' + cx({ 'bg-green-300 text-green-600': mode === 'over', 'bg-blue-300 text-blue-600': mode === 'dropped' })}>
-
-    <span className={'select-none'}>{message}</span>
+  // ddonClick={() => { openClutter() }}
+  return <div ref={drop} className={' h-full w-full flex justify-center items-center ' + cx({ 'text-green-600': mode === 'over' || mode === 'dropped' })}>
+    <div className={'flex justify-center items-center flex-col'}>
+      <img src={require('../pages/img/circle.svg')} className={'mb-3'} />
+      <span className={'select-none text-lg'}>{message}</span>
+    </div>
   </div>
 }
 

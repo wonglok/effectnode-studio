@@ -2,6 +2,48 @@
 import localforage from 'localforage'
 import create from 'zustand'
 
+let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`
+
+export const useProjectRoots = create((set, get) => {
+  let rootStorage = localforage.createInstance({
+    name: 'EffectNodeProjectRoots',
+    version: 1.0,
+    description: 'Effect Node Project Roots'
+  })
+  return {
+    refresh: 0,
+    rootStorage,
+    get,
+    set,
+    getDocs: async () => {
+      let keys = await rootStorage.keys()
+      let snaps = []
+      for (let key of keys) {
+        let item = await rootStorage.getItem(key)
+        snaps.push(item)
+      }
+      return snaps
+    },
+    setDoc: async ({ doc }) => {
+      set({ refresh: Math.random() })
+      return rootStorage.setItem(doc._id, doc)
+    },
+    getDoc: async ({ _id }) => {
+      return await rootStorage.getItem(_id)
+    },
+    removeDoc: async ({ doc }) => {
+      let res = await rootStorage.removeItem(doc._id)
+      return res
+    },
+    makeDoc: () => {
+      return {
+        _id: getID()
+      }
+    }
+  }
+})
+
+
 export const useApp = create((set, get) => {
   let projectStorage = localforage.createInstance({
     name: 'EffectNodeEditorProjects',
@@ -26,7 +68,6 @@ export const useApp = create((set, get) => {
     return map.get(id)
   }
 
-  let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`
 
   return {
     refresher: 0,
@@ -40,20 +81,7 @@ export const useApp = create((set, get) => {
         let item = await projectStorage.getItem(key)
         snaps.push(item)
       }
-
       return snaps
-
-      // projectStorage.keys().then(keys => {
-      //   keys.forEach(key => {
-      //     projectStorage.getItem(key)
-      //       .then(e => {
-      //         let docs = get().docs
-      //         set({
-      //           docs: [e, ...docs]
-      //         })
-      //       })
-      //   })
-      // })
     },
     putDoc: async ({ doc }) => {
       return projectStorage.setItem(doc._id, doc)

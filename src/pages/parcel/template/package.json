@@ -1,0 +1,10 @@
+{
+  "name": "effectnode-project",
+  "devDependencies": {
+    "parcel-bundler": "*"
+  },
+  "scripts": {
+    "dev": "parcel index.html",
+    "build": "parcel build index.html"
+  }
+}

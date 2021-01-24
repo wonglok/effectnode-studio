@@ -34,7 +34,7 @@ export function LineItem({ line }) {
     const colorC = new Color()
 
     for (let i = 0; i < PointCount; i++) {
-      colorC.copy(colorA).lerp(colorB, (i / PointCount) * 1)
+      colorC.copy(colorA).lerp(colorB, ((i / PointCount)))
       colors.push(colorC.r, colorC.g, colorC.b)
     }
 
