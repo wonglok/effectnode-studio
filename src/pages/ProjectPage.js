@@ -15,7 +15,7 @@ export function ProjectPage () {
 
   return <Layout title={'Project Editor'}>
     <div style={{ height: 'calc(100% - 60px)' }} className="">
-      <ProjectContext.Provider value={{ url: query.get('url'), useWins }}>
+      <ProjectContext.Provider value={{ url: decodeURIComponent(query.get('url')), useWins }}>
         <div className={'h-full w-full relative'}>
           <WindowSet projectID={query.get('url')}></WindowSet>
           <TaskBarSet projectID={query.get('url')}></TaskBarSet>

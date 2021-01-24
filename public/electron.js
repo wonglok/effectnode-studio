@@ -18,6 +18,7 @@ function createNewWindow () {
     width: 900,
     height: 680,
     webPreferences: {
+      webviewTag: true,
       nodeIntegration: true,
       enableRemoteModule: true
     }
@@ -40,6 +41,7 @@ function createWindow() {
     width: 900,
     height: 680,
     webPreferences: {
+      webviewTag: true,
       nodeIntegration: true,
       enableRemoteModule: true
     }

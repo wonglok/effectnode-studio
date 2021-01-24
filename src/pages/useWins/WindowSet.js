@@ -62,7 +62,7 @@ export function WindowTemplate ({ children, toolBarClassName = 'bg-green-400', i
   }
 
   return <div className={"absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg"} style={{ width: `${rect.w}px`, height: `${rect.h}px`, transform: `translate3d(${rect.x}px, ${rect.y}px, 0px)` }}>
-    <div className={"w-full px-1 flex justify-between items-center " + toolBarClassName} {...toolbar()}>
+    <div style={{ height: 25 + 'px' }} className={"w-full px-1 text-sm flex justify-between items-center " + toolBarClassName} {...toolbar()}>
       <div>
         {initVal.name}
       </div>
@@ -75,7 +75,7 @@ export function WindowTemplate ({ children, toolBarClassName = 'bg-green-400', i
     </div>
     <div className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 left-1 bg-blue-500 cursor-move" {...resizerBL()}>
     </div>
-    <div>{children}</div>
+    <div style={{ height: `${rect.h - 25}px` }}>{children}</div>
   </div>
 }
 
