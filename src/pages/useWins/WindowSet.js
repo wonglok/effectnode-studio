@@ -1,7 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useDrag } from 'react-use-gesture'
 import slugify from 'slugify'
-import { MainEditor, PreviewBox } from './BuiltInWindows.js'
+
+import { MainEditor } from './MainEditor.js'
+import { PreviewBox } from './PreviewBox.js'
+
 import { ProjectContext } from '../ProjectPage.js'
 /* eslint-disable react-hooks/exhaustive-deps */
 export function WindowTemplate ({ children, toolBarClassName = 'bg-green-400', initVal, showToolBtn = true, onChange = () => {} }) {

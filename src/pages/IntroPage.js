@@ -19,11 +19,15 @@ function ThankYouCard ({ children, text, className, onClick }) {
   </div>
 }
 
-
 export const RecentItem = ({ doc, alt }) => {
+  let fs = window.require('fs-extra')
   let removeDoc = useProjectRoots(s => s.removeDoc)
   let openDoc = ({ doc }) => {
-    window.location.assign(`/project?url=${encodeURIComponent(doc.path)}`)
+    if (fs.existsSync(doc.path + '/package.json')) {
+      window.location.assign(`/project?url=${encodeURIComponent(doc.path)}`)
+    } else {
+      window.alert('no project found')
+    }
   }
 
   return <div className={"px-3 m-3 flex cursor-pointer py-2 text-xs bg-gray-100 bg-gradient-to-tr text-white rounded-2xl " + (alt ? `  from-purple-400 to-red-500 ` : ` from-blue-400  to-green-500 `)}>
@@ -31,9 +35,11 @@ export const RecentItem = ({ doc, alt }) => {
       <div className="overflow-x-scroll inline-flex items-center">{doc.title}</div>
       <div className="overflow-x-scroll inline-flex items-center">{doc.path}</div>
     </div>
+
     <div className="w-14 ml-3 inline-flex items-center justify-center ">
       <div className={`p-3 border bg-white rounded-2xl ${alt ? `text-red-700` : `text-purple-700`}`} onClick={() => { openDoc({ doc }) }}>Open</div>
     </div>
+
     <div className="w-14 ml-3 inline-flex items-center justify-center ">
       <div className="p-3 border border-white rounded-2xl" onClick={() => { removeDoc({ doc }) }}>Remove</div>
     </div>
@@ -107,14 +113,19 @@ export function IntroPage () {
       file.isDirectory = isDirectory
     })
 
-    dropItem({ files })
-
-    await checkBeforeCreateProject({ files })
+    await checkBeforeCreateProject({ files, done: () => {
+      dropItem({ files })
+    } })
   }
 
   let openProject = ({ folder }) => {
-    window.location.assign(`/project?url=${encodeURIComponent(folder.path)}`)
-    console.log('open project')
+    let fs = window.require('fs-extra')
+    if (fs.existsSync(folder.path + '/package.json')) {
+      window.location.assign(`/project?url=${encodeURIComponent(folder.path)}`)
+      console.log('open project')
+    } else {
+      window.alert('no project found')
+    }
   }
 
   let createProjectFiles = ({ folder }) => {
@@ -122,7 +133,7 @@ export function IntroPage () {
     openProject({ folder })
   }
 
-  let checkBeforeCreateProject = async ({ files }) => {
+  let checkBeforeCreateProject = async ({ files, done }) => {
     let firstFolder = files.filter(e => e.isDirectory)[0]
     if (firstFolder) {
       const fs = window.require('fs');
@@ -148,12 +159,13 @@ export function IntroPage () {
         window.alert('Please select an Empty Folder to create a new project.');
       } else if (vizfiles.length === 0) {
         createProjectFiles({ folder: firstFolder })
+        done()
       }
     }
   }
 
   let checkProjectHasPackage = async ({ firstFolder }) => {
-    const fs = window.require('fs');
+    const fs = window.require('fs-extra');
     const path = window.require('path')
 
     const dir = fs.opendirSync(firstFolder.path);
@@ -173,7 +185,9 @@ export function IntroPage () {
     })
 
     if (vizfiles.length >= 1) {
-      dropItem({ files: [firstFolder] })
+      if (fs.existsSync(firstFolder.path + '/package.json')) {
+        dropItem({ files: [firstFolder] })
+      }
       openProject({ folder: firstFolder })
     } else {
       window.alert(`This folder isn't initialised.`)

@@ -11,6 +11,9 @@ export const getLowDB = ({ filePath }) => {
     const low = window.require('lowdb')
     const Memory = window.require('lowdb/adapters/Memory')
     const adapter = new Memory()
+    adapter.write = () => {
+      window.dispatchEvent(new CustomEvent('flush', { detail: {} }))
+    }
     const db = low(adapter)
 
     const text = fs.readFileSync(filePath, 'utf-8')

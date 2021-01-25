@@ -1,5 +1,4 @@
-// const getPort = window.require('get-port');
-const fs = window.require('fs')
+const fs = window.require('fs-extra')
 
 export function getNonce() {
 	let text = '';
@@ -159,30 +158,31 @@ function makePackage ({ folder }) {
 function makeGitIgnore ({ folder }) {
   let gitIgnore = `# See https://help.github.com/ignore-files/ for more about ignoring files.
 
-  # dependencies
-  /node_modules
+# dependencies
+/node_modules
 
-  # testing
-  /coverage
+# testing
+/coverage
 
-  # production
-  /build
-  /dist
+# production
+/build
+/dist
 
-  # misc
-  .DS_Store
-  .env.local
-  .env.development.local
-  .env.test.local
-  .env.production.local
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-  npm-debug.log*
-  yarn-debug.log*
-  yarn-error.log*
-  .idea
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea
 
-  cache`
-  fs.writeFileSync(folder.path + '/.gitignore.json', gitIgnore, 'utf8')
+/cache`
+
+  fs.writeFileSync(folder.path + '/.gitignore', gitIgnore, 'utf8')
 }
 
 export function createFiles ({ folder }) {
@@ -269,6 +269,7 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
 
     bundler.on('buildEnd', () => {
       // Do something...
+      window.dispatchEvent(new CustomEvent('reload', { detail: {} }))
       console.log('buildEnd')
 
       if (ready) {
@@ -278,10 +279,12 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
 
     bundler.on('buildError', (error) => {
       console.log('buildError', error)
+      window.dispatchEvent(new CustomEvent('reload', { detail: {} }))
     });
 
     bundler.on('bundled', (bundle) => {
       console.log('bundled', bundle)
+
       // bundler contains all assets and bundles, see documentation for details
     });
 
@@ -312,28 +315,38 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
 }
 
 export function watchFiles ({ projectRoot, onTree = () => {} }) {
+  // const fs = window.require('fs-extra')
   var watch = window.require('node-watch');
-  const dirTree = window.require("directory-tree");
-  const getTree = () => dirTree(projectRoot + '/src/js/boxes');
+  // const dirTree = window.require("directory-tree");
+
+  // fs.ensureDirSync(projectRoot + '/src/js/boxes')
+
+  // const getTree = () => {
+  //   fs.ensureDirSync(projectRoot + '/src/js/boxes')
+  //   dirTree(projectRoot + '/src/js/boxes');
+  // }
 
   let watcher = watch(projectRoot + '/src/js/boxes', { recursive: false });
 
   watcher.on('change', function(evt, name) {
-    console.log(evt,name)
-    window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
-    onTree({ tree: getTree() })
+    console.log(evt, name)
+    onTree()
+    // window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
+    // onTree({ tree: getTree() })
   });
 
   watcher.on('error', function(err) {
     // handle error
     console.log(err)
+    window.location.assign('/')
   });
 
   watcher.on('ready', function() {
     // the watcher is ready to respond to changes
     console.log('ready')
-    window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
-    onTree({ tree: getTree() })
+    onTree()
+    // window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
+    // onTree({ tree: getTree() })
   });
 
   window.process.on('SIGINT', () => {
