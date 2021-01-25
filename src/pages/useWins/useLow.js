@@ -9,16 +9,12 @@ export const useLowFile = ({ filePath }) => {
   if (cache) {
     return cache
   } else {
-    cache = create((set, get) => {
-      const low = window.require('lowdb')
-      const FileAsync = window.require('lowdb/src/adapters/FileAsync.js')
-      const adapter = new FileAsync(filePath)
-      const db = low(adapter)
-      return {
-        db
-      }
-    })
+    const low = window.require('lowdb')
+    const FileAsync = window.require('lowdb/src/adapters/FileAsync.js')
+    const adapter = new FileAsync(filePath)
+    const db = low(adapter)
 
+    cache = db
     return cache
   }
 }

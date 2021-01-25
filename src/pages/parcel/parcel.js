@@ -104,6 +104,15 @@ export default () => {
   fs.writeFileSync(folder.path + '/src/js/boxes/apple.js', codeJS, 'utf8')
 }
 
+function makeMeta ({ folder }) {
+  let metaJSON = JSON.stringify({
+    "boxes": [],
+    "cables": [],
+    "slots": []
+  }, null, 2)
+
+  fs.writeFileSync(folder.path + '/src/js/meta.json', metaJSON, 'utf8')
+}
 
 function makePackage ({ folder }) {
   let packageJSON = JSON.stringify({
@@ -165,6 +174,7 @@ export function createFiles ({ folder }) {
   makeBoxJSa({ folder })
   makeBoxJSb({ folder })
   makePackage({ folder })
+  makeMeta({ folder })
   makeGitIgnore({ folder })
 }
 
@@ -288,8 +298,8 @@ export function watchFiles ({ projectRoot, onTree = () => {} }) {
   let watcher = watch(projectRoot + '/src/js/boxes', { recursive: false });
 
   watcher.on('change', function(evt, name) {
-    // callback
     console.log(evt,name)
+    window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
     onTree({ tree: getTree() })
   });
 
@@ -301,6 +311,7 @@ export function watchFiles ({ projectRoot, onTree = () => {} }) {
   watcher.on('ready', function() {
     // the watcher is ready to respond to changes
     console.log('ready')
+    window.dispatchEvent(new CustomEvent('reload-tree', { detail: {} }))
     onTree({ tree: getTree() })
   });
 
