@@ -49,15 +49,17 @@ function makeFolders ({ folder }) {
   fs.mkdirSync(folder.path + '/prod/dist', { recursive: true })
   fs.mkdirSync(folder.path + '/prod/dist/js', { recursive: true })
   fs.mkdirSync(folder.path + '/src', { recursive: true })
+
   fs.mkdirSync(folder.path + '/src/assets', { recursive: true })
   fs.mkdirSync(folder.path + '/src/js', { recursive: true })
   fs.mkdirSync(folder.path + '/src/js/boxes', { recursive: true })
+  fs.mkdirSync(folder.path + '/src/js/meta_backup', { recursive: true })
 }
 
 function makeEntryJS ({ folder }) {
   let codeJS = /* j sx */`import all from './boxes/*.js'
-import Base from 'lowdb/adapters/Base'
 import lowdb from 'lowdb'
+import Base from 'lowdb/adapters/Base'
 
 class Memory extends Base {
   read() {
@@ -69,34 +71,33 @@ class Memory extends Base {
 let adapter = new Memory()
 export const db = lowdb(adapter)
 
+window.StreamInput = (val) => {
+  db.setState(val).write()
+  window.dispatchEvent(new CustomEvent('sync-state', { detail: db.getState() }))
+  console.log(JSON.stringify(db.getState()))
+}
+
+if (process.env.NODE_ENV === 'production') {
+  let meta = require('./meta.json')
+  db.defaults(meta).write()
+}
+
 function godebug ({ mounter }) {
   // debuggers
   mounter.style.whiteSpacing = 'pre'
   mounter.innerText = JSON.stringify(db.getState())
-  window.addEventListener('hydrate-updated', ({ detail }) => {
+  window.addEventListener('sync-state', ({ detail }) => {
     mounter.innerText = JSON.stringify(detail)
   })
 }
 
 function setup ({ mounter }) {
-  if (process.env.NODE_ENV === 'production') {
-    let meta = require('./meta.json')
-    db.defaults(meta).write()
-  }
-
-  window.StreamInput = (val) => {
-    db.setState(val).write()
-    window.dispatchEvent(new CustomEvent('hydrate-updated', { detail: db.getState() }))
-    console.log(JSON.stringify(db.getState()))
-  }
-
   godebug({ mounter })
 }
 
 export default setup
 export { setup }
-
-  `
+`
   fs.writeFileSync(folder.path + '/src/js/entry.js', codeJS, 'utf8')
 }
 

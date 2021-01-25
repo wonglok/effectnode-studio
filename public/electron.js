@@ -82,27 +82,35 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on('asynchronous-message', (event, arg) => {
-  console.log(arg) // prints "ping"
-  event.reply('asynchronous-reply', 'pong')
-})
+// ipcMain.on('asynchronous-message', (event, arg) => {
+//   console.log(arg) // prints "ping"
+//   event.reply('asynchronous-reply', 'pong')
+// })
 
-ipcMain.on('open', (event, filePath) => {
+ipcMain.on('open', (event, filePath, root) => {
   var openInEditor = require('open-in-editor');
-  var editor = openInEditor.configure({
+  // var editorFolder = openInEditor.configure({
+  //   // options
+  //   editor: 'code',
+  //   pattern: '--new-window {filename}'
+  // }, function(err) {
+  //   console.error('Something went wrong: ' + err);
+  // });
+
+  var editorFile = openInEditor.configure({
     // options
     editor: 'code',
-    pattern: '-r -g {filename}:{line}:{column}'
+    pattern: '-g {filename}:{line}:{column} -n'
   }, function(err) {
     console.error('Something went wrong: ' + err);
   });
 
-  // // editor.open(__dirname'path/to/file.js:3:10')
-  editor.open(`${filePath}:1:1`)
+  editorFile.open(`${filePath}:1:1`)
     .then(function() {
-      event.reply('asynchronous-reply', 'pong')
       console.log('Success!');
     }, function(err) {
       console.error('Something went wrong: ' + err);
     });
+
+
 })
