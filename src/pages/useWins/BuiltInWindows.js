@@ -7,7 +7,6 @@ import _ from 'lodash'
 /* eslint-disable react-hooks/exhaustive-deps */
 
 export const ValueEditor = () => {
-  const fs = window.require('fs')
   const path = window.require('path')
   const { url } = useContext(ProjectContext)
   const db = useMemo(() => {
@@ -22,11 +21,11 @@ export const ValueEditor = () => {
     db.set('number', val).write()
     setNum(val)
 
-    window.dispatchEvent(new CustomEvent('stream', { detail: {} }))
+    window.dispatchEvent(new CustomEvent('flush', { detail: {} }))
   }
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('stream', { detail: {} }))
+    window.dispatchEvent(new CustomEvent('flush', { detail: {} }))
   }, [url])
 
   return <div>
@@ -136,9 +135,9 @@ export const PreviewBox = () => {
       console.log(e)
     }
 
-    window.addEventListener('stream', pushHydration)
+    window.addEventListener('flush', pushHydration)
     return () => {
-      window.removeEventListener('stream', pushHydration)
+      window.removeEventListener('flush', pushHydration)
     }
   }
 
