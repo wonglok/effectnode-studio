@@ -15,4 +15,5 @@ module.exports = ({ globals, createEffect }) => {
       outputB.sendData(data)
     })
   })
+
 }

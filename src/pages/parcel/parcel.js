@@ -1,4 +1,4 @@
-const getPort = window.require('get-port');
+// const getPort = window.require('get-port');
 const fs = window.require('fs')
 
 export function getNonce() {
@@ -10,16 +10,16 @@ export function getNonce() {
 	return text;
 }
 
-function makeHTMLCode ({ cspSource, nonce }) {
+function makeHTMLCode () {
   return /* html */`<!DOCTYPE html>
+  <!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta http-equiv="Content-Security-Policy" content="default-src ${cspSource} blob:; img-src ${cspSource}; style-src 'nonce-${nonce}' ${cspSource}; script-src 'nonce-${nonce}';">
     <title>EffectNode Project</title>
-    <style nonce="${nonce}" >
+    <style>
       body,html,.full, #root{
         width: 100%;
         height: 100%;
@@ -31,8 +31,8 @@ function makeHTMLCode ({ cspSource, nonce }) {
   </head>
   <body>
     <div id="root"></div>
-    <script nonce="${nonce}" src="./js/entry.js"></script>
-    <script nonce="${nonce}">
+    <script src="./dist/js/entry.js"></script>
+    <script>
       console.log(window.MyCanvas.default({ mounter: document.querySelector('#root') }))
     </script>
   </body>
@@ -41,11 +41,13 @@ function makeHTMLCode ({ cspSource, nonce }) {
 
 function writeHTML ({ folder }) {
   const indexHTML = makeHTMLCode({ nonce: getNonce(), cspSource: 'http://localhost:3333' })
-  fs.writeFileSync(folder.path + '/dist/index.html', indexHTML, 'utf8')
+  fs.writeFileSync(folder.path + '/prod/index.html', indexHTML, 'utf8')
 }
 
 function makeFolders ({ folder }) {
-  fs.mkdirSync(folder.path + '/dist', { recursive: true })
+  fs.mkdirSync(folder.path + '/prod', { recursive: true })
+  fs.mkdirSync(folder.path + '/prod/dist', { recursive: true })
+  fs.mkdirSync(folder.path + '/prod/dist/js', { recursive: true })
   fs.mkdirSync(folder.path + '/src', { recursive: true })
   fs.mkdirSync(folder.path + '/src/assets', { recursive: true })
   fs.mkdirSync(folder.path + '/src/js', { recursive: true })
@@ -53,17 +55,29 @@ function makeFolders ({ folder }) {
 }
 
 function makeEntryJS ({ folder }) {
-  let codeJS = /* js */`import all from './boxes/*.js'
+  let codeJS = /* jsx */`import all from './boxes/*.js'
 
-function entry ({ mounter }) {
-  for (let kn in all) {
-    console.log(kn, all[kn].default())
-  }
-  mounter.innerHTML = '123'
+window.SYNCInputs = (val) => {
+  console.log(JSON.stringify(val, null, 2))
 }
 
-export default entry
-export { entry }
+function setup ({ mounter }) {
+  let txt = ''
+  console.log(JSON.stringify(all, null, '	') + '\t')
+  for (let kn in all) {
+    txt += '\\n' + all[kn].default()
+    console.log(txt, kn)
+  }
+
+  mounter.style.whiteSpacing = 'pre'
+  mounter.innerText = txt
+
+  console.log('123')
+}
+
+export default setup
+export { setup }
+
   `
   fs.writeFileSync(folder.path + '/src/js/entry.js', codeJS, 'utf8')
 }
@@ -73,7 +87,7 @@ function makeBoxJSa ({ folder }) {
   import moment from 'moment'
 export default () => {
   console.log('core.js', moment().calendar())
-  return moment().calendar() + 'core'
+  return moment().calendar() + 'core' + Math.random()
 }
   `
   fs.writeFileSync(folder.path + '/src/js/boxes/core.js', codeJS, 'utf8')
@@ -94,15 +108,51 @@ export default () => {
 function makePackage ({ folder }) {
   let packageJSON = JSON.stringify({
     "name": "effectnode-project",
+    "license": "MIT",
     "devDependencies": {
-      "parcel-bundler": "*"
+      "parcel-bundler": "*",
+      "npm-run-all": "^0.0.0",
+      "serve": "*"
     },
     "scripts": {
-      "dev": "parcel index.html",
-      "build": "parcel build index.html"
+      "dev": "run-p watchjs start",
+      "watchjs": "parcel watch ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
+      "build": "parcel build ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
+      "start": "serve ./prod"
+    },
+    "dependencies": {
     }
   })
   fs.writeFileSync(folder.path + '/package.json', packageJSON, 'utf8')
+}
+
+function makeGitIgnore ({ folder }) {
+  let gitIgnore = `# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+  # dependencies
+  /node_modules
+
+  # testing
+  /coverage
+
+  # production
+  /build
+  /dist
+
+  # misc
+  .DS_Store
+  .env.local
+  .env.development.local
+  .env.test.local
+  .env.production.local
+
+  npm-debug.log*
+  yarn-debug.log*
+  yarn-error.log*
+  .idea
+
+  cache`
+  fs.writeFileSync(folder.path + '/.gitignore.json', gitIgnore, 'utf8')
 }
 
 export function createFiles ({ folder }) {
@@ -115,6 +165,7 @@ export function createFiles ({ folder }) {
   makeBoxJSa({ folder })
   makeBoxJSb({ folder })
   makePackage({ folder })
+  makeGitIgnore({ folder })
 }
 
 export async function installDeps ({ folder }) {
@@ -141,13 +192,15 @@ export async function installDeps ({ folder }) {
   })
 }
 
+// 12321
 export async function runSession ({ projectRoot, onReload = () => {} }) {
   const Bundler = window.require('parcel-bundler');
+  const getPort = window.require('get-port');
   const path = require('path');
   const entryFiles = path.join(projectRoot, './src/js/entry.js');
 
   const options = {
-    outDir: path.join(projectRoot, './dist/js/'), // The out directory to put the build files in, defaults to dist
+    outDir: path.join(projectRoot, './prod/dist/js/'), // The out directory to put the build files in, defaults to dist
     // outFile: '*.js', // The name of the outputFile
     publicUrl: '/', // The url to serve on, defaults to '/'
     watch: true, // Whether to watch the files and rebuild them on change, defaults to process.env.NODE_ENV !== 'production'
@@ -188,7 +241,7 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
       console.log('buildEnd')
 
       if (ready) {
-        onReload({ port, url: `http://localhost:${port}` })
+        onReload({ port, url: `http://localhost:${port}/?r=${Math.random()}` })
       }
     });
 
@@ -213,44 +266,53 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
       res.send(makeHTMLCode({ nonce: getNonce(), cspSource: 'http://localhost:' + port }))
     })
 
-    app.use(express.static(path.join(projectRoot, './dist/')))
+    app.use(express.static(path.join(projectRoot, './prod/')))
 
-    app.listen(port, () => {
-      console.log('http://localhost:' + port)
-      onReload({ port, url: `http://localhost:${port}` })
-      ready = true
+    setTimeout(() => {
+      app.listen(port, () => {
+        console.log('http://localhost:' + port + '/?r=' + Math.random())
+        onReload({ port, url: `http://localhost:${port}/?r=${Math.random()}` })
+        ready = true
+      })
     })
   } catch (e) {
     console.log(e)
   }
 }
 
-export function watchFiles ({ projectRoot, onTree }) {
-  const chokidar = window.require('chokidar');
-  const path = window.require('path');
+export function watchFiles ({ projectRoot, onTree = () => {} }) {
+  var watch = window.require('node-watch');
+  const dirTree = window.require("directory-tree");
+  const getTree = () => dirTree(projectRoot + '/src/js/boxes');
 
-  const map = new Map()
-  // One-liner for current directory
-  let watcher = chokidar.watch(path.join(projectRoot, '/src/js/boxes'))
-  .on('add', (path) => {
-    map.set(path, path)
-    onTree({ tree: map })
-  })
-  .on('change', (path) => {
-    map.set(path, path)
-    onTree({ tree: map })
-  })
-  .on('unlink', (path) => {
-    map.delete(path, path)
-    onTree({ tree: map })
-  })
-  .on('all', (event, path) => {
-    console.log(event, path);
+  let watcher = watch(projectRoot + '/src/js/boxes', { recursive: false });
+
+  watcher.on('change', function(evt, name) {
+    // callback
+    console.log(evt,name)
+    onTree({ tree: getTree() })
+  });
+
+  watcher.on('error', function(err) {
+    // handle error
+    console.log(err)
+  });
+
+  watcher.on('ready', function() {
+    // the watcher is ready to respond to changes
+    console.log('ready')
+    onTree({ tree: getTree() })
+  });
+
+  window.process.on('SIGINT', () => {
+    if (!watcher.isClosed()) {
+      watcher.close()
+    }
   });
 
   return () => {
-    watcher.close()
+    if (!watcher.isClosed()) {
+      watcher.close()
+    }
   }
 }
-
-//

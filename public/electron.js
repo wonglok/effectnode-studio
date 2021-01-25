@@ -15,12 +15,16 @@ let mainWindow;
 
 function createNewWindow () {
   let projectWindow = new BrowserWindow({
-    width: 900,
-    height: 680,
+    x: 0,
+    left: 0,
+    width: isDev ? 1920 : 800,
+    height: isDev ? 1080 * 2 : 600,
     webPreferences: {
+      contextIsolation: false,
       webviewTag: true,
       nodeIntegration: true,
-      enableRemoteModule: true
+      enableRemoteModule: true,
+      nodeIntegrationInWorker: false
     }
   });
 
@@ -29,6 +33,7 @@ function createNewWindow () {
       ? "http://localhost:3000"
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
+
   projectWindow.maximize()
 }
 
@@ -38,12 +43,14 @@ ipcMain.on('open-window', () => {
 
 function createWindow () {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 680,
+    width: isDev ? 1920 : 800,
+    height: isDev ? 1080 * 2 : 600,
     webPreferences: {
+      contextIsolation: false,
       webviewTag: true,
       nodeIntegration: true,
-      enableRemoteModule: true
+      enableRemoteModule: true,
+      nodeIntegrationInWorker: false
     }
   });
 
@@ -52,11 +59,13 @@ function createWindow () {
       ? "http://localhost:3000"
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
-  mainWindow.maximize();
+  // mainWindow.maximize();
 
   mainWindow.on("closed", () => {
     app.exit(0);
   });
+
+  mainWindow.webContents.openDevTools()
 }
 
 app.on("ready", createWindow);
@@ -78,21 +87,22 @@ ipcMain.on('asynchronous-message', (event, arg) => {
   event.reply('asynchronous-reply', 'pong')
 })
 
-ipcMain.on('open', () => {
-  // var openInEditor = require('open-in-editor');
-  // var editor = openInEditor.configure({
-  //   // options
-  //   editor: 'code',
-  //   pattern: '-r -g {filename}:{line}:{column}'
-  // }, function(err) {
-  //   console.error('Something went wrong: ' + err);
-  // });
+ipcMain.on('open', (event, filePath) => {
+  var openInEditor = require('open-in-editor');
+  var editor = openInEditor.configure({
+    // options
+    editor: 'code',
+    pattern: '-r -g {filename}:{line}:{column}'
+  }, function(err) {
+    console.error('Something went wrong: ' + err);
+  });
 
   // // editor.open(__dirname'path/to/file.js:3:10')
-  // editor.open(`${__dirname}/electron.js:47:7`)
-  // .then(function() {
-  //   console.log('Success!');
-  // }, function(err) {
-  //   console.error('Something went wrong: ' + err);
-  // });
+  editor.open(`${filePath}:1:1`)
+    .then(function() {
+      event.reply('asynchronous-reply', 'pong')
+      console.log('Success!');
+    }, function(err) {
+      console.error('Something went wrong: ' + err);
+    });
 })
