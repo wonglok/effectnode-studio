@@ -55,24 +55,42 @@ function makeFolders ({ folder }) {
 }
 
 function makeEntryJS ({ folder }) {
-  let codeJS = /* jsx */`import all from './boxes/*.js'
+  let codeJS = /* j sx */`import all from './boxes/*.js'
+import Base from 'lowdb/adapters/Base'
+import lowdb from 'lowdb'
 
-window.SYNCInputs = (val) => {
-  console.log(JSON.stringify(val, null, 2))
+class Memory extends Base {
+  read() {
+    return this.defaultValue
+  }
+  write () {
+  }
+}
+let adapter = new Memory()
+export const db = lowdb(adapter)
+
+function godebug ({ mounter }) {
+  // debuggers
+  mounter.style.whiteSpacing = 'pre'
+  mounter.innerText = JSON.stringify(db.getState())
+  window.addEventListener('hydrate-updated', ({ detail }) => {
+    mounter.innerText = JSON.stringify(detail)
+  })
 }
 
 function setup ({ mounter }) {
-  let txt = ''
-  console.log(JSON.stringify(all, null, '	') + '\t')
-  for (let kn in all) {
-    txt += '\\n' + all[kn].default()
-    console.log(txt, kn)
+  if (process.env.NODE_ENV === 'production') {
+    let meta = require('./meta.json')
+    db.defaults(meta).write()
   }
 
-  mounter.style.whiteSpacing = 'pre'
-  mounter.innerText = txt
+  window.StreamInput = (val) => {
+    db.setState(val).write()
+    window.dispatchEvent(new CustomEvent('hydrate-updated', { detail: db.getState() }))
+    console.log(JSON.stringify(db.getState()))
+  }
 
-  console.log('123')
+  godebug({ mounter })
 }
 
 export default setup
@@ -126,10 +144,12 @@ function makePackage ({ folder }) {
     "scripts": {
       "dev": "run-p watchjs start",
       "watchjs": "parcel watch ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
-      "build": "parcel build ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
+      "build": "NODE_ENV=production parcel build ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
       "start": "serve ./prod"
     },
     "dependencies": {
+      "lowdb": "^1.0.0",
+      "moment": "^2.29.1"
     }
   })
   fs.writeFileSync(folder.path + '/package.json', packageJSON, 'utf8')
