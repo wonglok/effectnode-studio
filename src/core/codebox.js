@@ -38,7 +38,7 @@ export const useBoxes = ({ db, root }) => {
     };
   });
 
-  const updateBox = async (box) => {
+  const updateBox = async ({ box }) => {
     db.get("boxes")
       .find((e) => e._id === box._id)
       .assign({
@@ -65,7 +65,7 @@ export const useBoxes = ({ db, root }) => {
     let filePath = path.join(root, `./src/js/boxes/${file}`);
     db.get("boxes")
       .push({
-        protected: state.boxes.length === 0,
+        isProtected: state.boxes.length === 0,
         isUserBoxes: true,
         _id,
         x: 20,
@@ -95,16 +95,18 @@ module.exports.box = () => {
     window.dispatchEvent(new Event("stream-to-webview"));
   };
 
-  const removeBox = async ({ file }) => {
-    let _id = file._id;
+  const removeBox = async ({ box }) => {
+    let _id = box._id;
     db.get("boxes").remove({ _id }).write();
-    fs.removeSync(file.path);
+    fs.removeSync(resolvePath({ box: box }));
 
     window.dispatchEvent(new Event("save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
   };
 
   const resolvePath = ({ box }) => {
+    let path = window.require("path");
+
     if (box.isEntry) {
       return path.join(root, "src/js/", box.file);
     } else if (box.isUserBoxes) {

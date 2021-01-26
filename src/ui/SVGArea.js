@@ -7,15 +7,15 @@ import React, {
 } from "react";
 import { useDrag, useWheel } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project";
-let path = window.require("path");
+import smalltalk from "smalltalk";
 
-export function Box({ box }) {
+export function Box({ box, graphRefresh = () => {} }) {
   const [rID, refresh] = useState(0);
   const { boxesUtil, root } = useContext(ProjectContext);
 
-  let updateBox = (box) => {
-    boxesUtil.updateBox(box);
-    refresh((s) => s + 1);
+  let updateBox = ({ box }) => {
+    boxesUtil.updateBox({ box });
+    refresh((s) => s + rID + 1);
   };
 
   const [drag, setDrag] = useState({ x: box.x, y: box.y });
@@ -28,7 +28,7 @@ export function Box({ box }) {
         return { ...s, x: s.x + dx, y: s.y + dy };
       });
     } else if (!down) {
-      updateBox({ ...box, ...drag });
+      updateBox({ box: { ...box, ...drag } });
     }
     // console.log([dx, dy])
   });
@@ -40,13 +40,18 @@ export function Box({ box }) {
   };
 
   const onClickLabel = async () => {
-    openFileEditor({ box: box });
+    openFileEditor({ box });
   };
 
   const onClickRemoveLabel = async () => {
-    smalltalk.confirm("Question", "Are you sure?").then(() => {
-      // boxesUtil.removeBox();
-    });
+    smalltalk
+      .confirm("Remove Box?", `"${box.displayName}"`)
+      .then(() => {
+        return boxesUtil.removeBox({ box });
+      })
+      .then(() => {
+        graphRefresh((s) => s + 1);
+      });
   };
 
   let paddingX = 10;
@@ -74,17 +79,19 @@ export function Box({ box }) {
       >
         {box.displayName || box.name}
       </text>
-      <text
-        onClick={onClickRemoveLabel}
-        className="select-none underline"
-        fill={"#ffecec"}
-        {...bind()}
-        x={chars * 10 + paddingX + paddingX}
-        y={fontSize + 1 + fontSize + 1 + 10}
-        fontSize={fontSize + "px"}
-      >
-        Remove
-      </text>
+      {!box.isProtected && (
+        <text
+          onClick={onClickRemoveLabel}
+          className="select-none underline"
+          fill={"#ffecec"}
+          {...bind()}
+          x={chars * 10 + paddingX + paddingX}
+          y={fontSize + 1 + fontSize + 1 + 10}
+          fontSize={fontSize + "px"}
+        >
+          Remove
+        </text>
+      )}
       {/* <text y={-20} fontSize={'12px'}>{JSON.stringify(box)}</text> */}
     </g>
   );
@@ -95,7 +102,7 @@ export function EntryCore() {
   const coreBox = {
     isEntry: true,
     isFixed: true,
-    protected: true,
+    isProtected: true,
     _id: "AAAAAAA",
     x: 130,
     y: 10,
@@ -121,12 +128,12 @@ export function SVGEditor({ rect, state }) {
   });
 
   const boxes = state.boxes.map((e) => {
-    return <Box key={e._id} box={e}></Box>;
+    return <Box key={e._id} box={e} graphRefresh={refresh}></Box>;
   });
 
   const addModule = async () => {
     await boxesUtil.addBox();
-    refresh((s) => s + 1);
+    refresh((s) => s + rID + 1);
     // addBox();
     // console.log(lowdb.get("boxes").value());
   };
