@@ -1,4 +1,8 @@
-html, body, #app, #root, .full{
+html,
+body,
+#app,
+#root,
+.full {
   width: 100%;
   height: 100%;
 }

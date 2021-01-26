@@ -185,9 +185,11 @@ yarn-error.log*
   fs.writeFileSync(folder.path + '/.gitignore', gitIgnore, 'utf8')
 }
 
-export function createFiles ({ folder }) {
+export function createFiles ({ folderPath }) {
   // let fs = window.require('fs')
   // let path = window.require('path')
+
+  let folder = { path: folderPath }
 
   makeFolders({ folder })
   writeHTML({ folder })
@@ -223,8 +225,7 @@ export async function installDeps ({ folder }) {
   })
 }
 
-// 12321
-export async function runSession ({ projectRoot, onReload = () => {} }) {
+export async function runSession ({ projectRoot, onReady = () => {} }) {
   const Bundler = window.require('parcel-bundler');
   const getPort = window.require('get-port');
   const path = require('path');
@@ -257,34 +258,29 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
     autoInstall: true, // Enable or disable auto install of missing dependencies found during bundling
   };
 
-  let ready = false
+  let server = false
   try {
     let port = await getPort({ port: 3333 })
     // Initializes a bundler using the entrypoint location and options provided
     const bundler = new Bundler(entryFiles, options);
     bundler.on('buildStart', entry => {
       // Do something...
-      console.log('buildStart', entry)
+      console.log('start-packing', entry)
     });
 
     bundler.on('buildEnd', () => {
       // Do something...
-      window.dispatchEvent(new CustomEvent('reload', { detail: {} }))
-      console.log('buildEnd')
-
-      if (ready) {
-        onReload({ port, url: `http://localhost:${port}/?r=${Math.random()}` })
-      }
+      console.log('done-packing')
+      window.dispatchEvent(new CustomEvent('done-packing', { detail: { port } }))
     });
 
     bundler.on('buildError', (error) => {
-      console.log('buildError', error)
-      window.dispatchEvent(new CustomEvent('reload', { detail: {} }))
+      console.log('error-packing', error)
     });
 
     bundler.on('bundled', (bundle) => {
-      console.log('bundled', bundle)
-
+      console.log('done-packing', bundle)
+      window.dispatchEvent(new CustomEvent('done-packing', { detail: { port } }))
       // bundler contains all assets and bundles, see documentation for details
     });
 
@@ -292,6 +288,19 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
     // Use the events if you're using watch mode as this promise will only trigger once and not for every rebuild
     const bundle = await bundler.bundle();
     console.log(bundle)
+
+    onReady({
+      port,
+      pack: async () => {
+        await bundler.bundle();
+      },
+      onDonePack: (donePack) => {
+        window.addEventListener('done-packing', donePack)
+        return () => {
+          window.removeEventListener('done-packing', donePack)
+        }
+      }
+    })
 
     var express = window.require('express')
     var app = express()
@@ -302,15 +311,17 @@ export async function runSession ({ projectRoot, onReload = () => {} }) {
 
     app.use(express.static(path.join(projectRoot, './prod/')))
 
-    setTimeout(() => {
-      app.listen(port, () => {
-        console.log('http://localhost:' + port + '/?r=' + Math.random())
-        onReload({ port, url: `http://localhost:${port}/?r=${Math.random()}` })
-        ready = true
-      })
+    server = app.listen(port, () => {
+      console.log('http://localhost:' + port + '/?r=' + Math.random())
     })
   } catch (e) {
     console.log(e)
+  }
+
+  return () => {
+    if (server) {
+      server.close()
+    }
   }
 }
 

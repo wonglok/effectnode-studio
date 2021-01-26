@@ -4,7 +4,7 @@ const BrowserWindow = electron.BrowserWindow;
 
 const path = require("path");
 const isDev = require("electron-is-dev");
-const { ipcMain } = require('electron')
+const { ipcMain } = require("electron");
 
 let mainWindow;
 
@@ -13,7 +13,7 @@ let mainWindow;
 //   updateInterval: "1 hour"
 // });
 
-function createNewWindow () {
+function createNewWindow() {
   let projectWindow = new BrowserWindow({
     x: 0,
     left: 0,
@@ -24,8 +24,8 @@ function createNewWindow () {
       webviewTag: true,
       nodeIntegration: true,
       enableRemoteModule: true,
-      nodeIntegrationInWorker: false
-    }
+      nodeIntegrationInWorker: false,
+    },
   });
 
   projectWindow.loadURL(
@@ -34,14 +34,14 @@ function createNewWindow () {
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
 
-  projectWindow.maximize()
+  projectWindow.maximize();
 }
 
-ipcMain.on('open-window', () => {
-  createNewWindow()
-})
+ipcMain.on("open-window", () => {
+  createNewWindow();
+});
 
-function createWindow () {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: isDev ? 1920 : 800,
     height: isDev ? 1080 * 2 : 600,
@@ -50,8 +50,8 @@ function createWindow () {
       webviewTag: true,
       nodeIntegration: true,
       enableRemoteModule: true,
-      nodeIntegrationInWorker: false
-    }
+      nodeIntegrationInWorker: false,
+    },
   });
 
   mainWindow.loadURL(
@@ -65,7 +65,7 @@ function createWindow () {
     app.exit(0);
   });
 
-  mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 }
 
 app.on("ready", createWindow);
@@ -82,6 +82,8 @@ app.on("activate", () => {
   }
 });
 
+require('./logic/logic.js')
+
 // contextIsolation
 
 // ipcMain.on('asynchronous-message', (event, arg) => {
@@ -89,30 +91,36 @@ app.on("activate", () => {
 //   event.reply('asynchronous-reply', 'pong')
 // })
 
-ipcMain.on('open', (event, filePath, root) => {
-  var openInEditor = require('open-in-editor');
-  // var editorFolder = openInEditor.configure({
-  //   // options
-  //   editor: 'code',
-  //   pattern: '--new-window {filename}'
-  // }, function(err) {
-  //   console.error('Something went wrong: ' + err);
-  // });
+// ipcMain.handle('getFolder', async (event, args) => {
+// })
+// ipcMain.on("open-window", (event, filePath, root) => {
+//   var openInEditor = require("open-in-editor");
 
-  var editorFile = openInEditor.configure({
-    // options
-    editor: 'code',
-    pattern: '-g {filename}:{line}:{column} -n'
-  }, function(err) {
-    console.error('Something went wrong: ' + err);
-  });
+//   // var editorFolder = openInEditor.configure({
+//   //   // options
+//   //   editor: 'code',
+//   //   pattern: '--new-window {filename}'
+//   // }, function(err) {
+//   //   console.error('Something went wrong: ' + err);
+//   // });
 
-  editorFile.open(`${filePath}:1:1`)
-    .then(function() {
-      console.log('Success!');
-    }, function(err) {
-      console.error('Something went wrong: ' + err);
-    });
+//   var editorFile = openInEditor.configure(
+//     {
+//       // options
+//       editor: "code",
+//       pattern: "-g {filename}:{line}:{column} -n",
+//     },
+//     function (err) {
+//       console.error("Something went wrong: " + err);
+//     }
+//   );
 
-
-})
+//   editorFile.open(`${filePath}:1:1`).then(
+//     function () {
+//       console.log("Success!");
+//     },
+//     function (err) {
+//       console.error("Something went wrong: " + err);
+//     }
+//   );
+// });

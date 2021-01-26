@@ -1,21 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react'
+import React from "react";
 
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   // useHistory
-} from "react-router-dom"
-import './globals.css'
+} from "react-router-dom";
+import "./globals.css";
 
 // import { EditorPage } from './pages/EditorPage'
 // import { TimeMachine } from './pages/TimeMachine.js'
 // import { DocsPage } from './pages/DocsPage.js'
 // import { OpenFolderPage } from './pages/OpenFolderPage'
 
-import { IntroPage } from './pages/IntroPage'
-import { ProjectPage } from './pages/ProjectPage'
+import { Welcome } from "./pages/Welcome";
+import { Project } from "./pages/Project";
 
 // import 'effectnode/dist/index.css'
 
@@ -30,7 +30,7 @@ import { ProjectPage } from './pages/ProjectPage'
 
 // <DropZone onFiles={console.log} className="full"></DropZone>
 
-export default function App () {
+export default function App() {
   return (
     <div className="full">
       <Router>
@@ -49,10 +49,10 @@ export default function App () {
           </Route> */}
 
           <Route path={'/project'}>
-            <ProjectPage></ProjectPage>
+            <Project></Project>
           </Route>
-          <Route path={'/'}>
-            <IntroPage></IntroPage>
+          <Route path={"/"}>
+            <Welcome></Welcome>
           </Route>
         </Switch>
       </Router>
