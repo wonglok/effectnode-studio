@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useDrag } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
 import { PreviewBox } from "./PreviewBox.js";
+import { SVGArea } from "./SVGArea.js";
 
 export function WindowTemplate({
   children,
@@ -79,19 +80,26 @@ export function WindowTemplate({
     onChange({ ...rect, hidden: true });
   };
 
-  const onZIndex = () => {
-    let zidx = winboxes.map((e) => e.zIndex || 0);
+  const getZMax = () => {
+    let zidx = winboxes.map((e, i) => e.zIndex || i);
+    if (zidx.length === 0) {
+      zidx = [1];
+    }
     let max = Math.max(...zidx) || 1;
     if (max >= 65535) {
-      max = 0;
+      max = 1;
     }
     if (max === Infinity) {
-      max = 0;
+      max = 1;
     }
-    if (rect.zIndex === Infinity) {
-      rect.zIndex = 0;
-    }
+    return max;
+  };
+
+  const onZIndex = () => {
+    let max = getZMax();
+    set({ ...rect, zIndex: max + 1 });
     onChange({ ...rect, zIndex: max + 1 });
+    // window.dispatchEvent(new CustomEvent("relayout-zindex"));
   };
 
   return (
@@ -132,17 +140,20 @@ export function WindowTemplate({
           </div>
         )}
       </div>
+      <div className="relative" style={{ height: `${rect.h - 25}px` }}>
+        {children}
+      </div>
+
       <div
+        style={{ zIndex: 10000000 }}
         className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 right-1 bg-blue-500 cursor-move"
         {...resizerBR()}
       ></div>
       <div
+        style={{ zIndex: 10000000 }}
         className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 left-1 bg-blue-500 cursor-move"
         {...resizerBL()}
       ></div>
-      <div onMouseDown={onZIndex} style={{ height: `${rect.h - 25}px` }}>
-        {children}
-      </div>
     </div>
   );
 }
@@ -186,65 +197,6 @@ export function AlwaysHereWindow({ children, name, pos }) {
       </WindowTemplate>
     )
   );
-
-  // let [doc, ssDoc] = useState(false);
-  // let slugName = slug(name);
-  // const { useWins } = useContext(ProjectContext);
-  // const wins = useWins((s) => s);
-  // let getDocFnc = () => {
-  //   wins.getDoc({ _id: slugName }).then((e) => {
-  //     if (!e) {
-  //       let doc = {
-  //         _id: slugName,
-  //         name,
-  //         x: 0,
-  //         y: 0,
-  //         w: 300,
-  //         h: 300,
-  //         ...pos,
-  //         hidden: false,
-  //       };
-  //       wins.setDoc({ doc });
-  //       ssDoc(doc);
-  //     } else {
-  //       ssDoc(e);
-  //     }
-  //   });
-  // };
-  // useEffect(() => {
-  //   getDocFnc();
-  // }, [slugName]);
-  // useEffect(() => {
-  //   let layout = () => {
-  //     getDocFnc();
-  //   };
-  //   window.addEventListener("relayout", layout);
-  //   return () => {
-  //     window.removeEventListener("relayout", layout);
-  //   };
-  // }, []);
-  // let onChange = (doc) => {
-  //   wins.setDoc({ doc });
-  //   setTimeout(() => {
-  //     window.dispatchEvent(new CustomEvent("relayout", { detail: doc }));
-  //   });
-  // };
-  // return (
-  //   <>
-  //     {doc && !doc.hidden && (
-  //       <WindowTemplate
-  //         showToolBtn={false}
-  //         toolBarClassName={
-  //           "bg-gradient-to-r from-green-600 via-green-400 to-green-800 text-white"
-  //         }
-  //         initVal={doc}
-  //         onChange={onChange}
-  //       >
-  //         {children}
-  //       </WindowTemplate>
-  //     )}
-  //   </>
-  // );
 }
 
 export function WindowBox({ children }) {
@@ -261,7 +213,7 @@ export function WindowBox({ children }) {
           h: window.innerHeight * 0.7,
         }}
       >
-        main
+        <SVGArea></SVGArea>
       </AlwaysHereWindow>
 
       <AlwaysHereWindow

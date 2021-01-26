@@ -82,7 +82,7 @@ app.on("activate", () => {
   }
 });
 
-require('./logic/logic.js')
+require("./logic/logic.js");
 
 // contextIsolation
 
@@ -93,34 +93,35 @@ require('./logic/logic.js')
 
 // ipcMain.handle('getFolder', async (event, args) => {
 // })
-// ipcMain.on("open-window", (event, filePath, root) => {
-//   var openInEditor = require("open-in-editor");
 
-//   // var editorFolder = openInEditor.configure({
-//   //   // options
-//   //   editor: 'code',
-//   //   pattern: '--new-window {filename}'
-//   // }, function(err) {
-//   //   console.error('Something went wrong: ' + err);
-//   // });
+ipcMain.on("open", (event, filePath, root) => {
+  var openInEditor = require("open-in-editor");
 
-//   var editorFile = openInEditor.configure(
-//     {
-//       // options
-//       editor: "code",
-//       pattern: "-g {filename}:{line}:{column} -n",
-//     },
-//     function (err) {
-//       console.error("Something went wrong: " + err);
-//     }
-//   );
+  // var editorFolder = openInEditor.configure({
+  //   // options
+  //   editor: 'code',
+  //   pattern: '--new-window {filename}'
+  // }, function(err) {
+  //   console.error('Something went wrong: ' + err);
+  // });
 
-//   editorFile.open(`${filePath}:1:1`).then(
-//     function () {
-//       console.log("Success!");
-//     },
-//     function (err) {
-//       console.error("Something went wrong: " + err);
-//     }
-//   );
-// });
+  var editorFile = openInEditor.configure(
+    {
+      // options
+      editor: "code",
+      pattern: "-g {filename}:{line}:{column} -n",
+    },
+    function (err) {
+      console.error("Something went wrong: " + err);
+    }
+  );
+
+  editorFile.open(`${filePath}:1:1`).then(
+    function () {
+      console.log("Success!");
+    },
+    function (err) {
+      console.error("Something went wrong: " + err);
+    }
+  );
+});

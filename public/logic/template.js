@@ -1,16 +1,17 @@
-const fs = require('fs-extra')
+const fs = require("fs-extra");
 
 function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }
 
-let makeHTMLCode = module.exports.makeHTMLCode = function makeHTMLCode () {
-  return /* html */`<!DOCTYPE html>
+let makeHTMLCode = (module.exports.makeHTMLCode = function makeHTMLCode() {
+  return /* html */ `<!DOCTYPE html>
   <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -35,127 +36,163 @@ let makeHTMLCode = module.exports.makeHTMLCode = function makeHTMLCode () {
       console.log(window.MyCanvas.default({ mounter: document.querySelector('#root') }))
     </script>
   </body>
-  </html>`
+  </html>`;
+});
+
+function writeHTML({ folder }) {
+  const indexHTML = makeHTMLCode({
+    nonce: getNonce(),
+    cspSource: "http://localhost:3333",
+  });
+  fs.writeFileSync(folder.path + "/prod/index.html", indexHTML, "utf8");
 }
 
-function writeHTML ({ folder }) {
-  const indexHTML = makeHTMLCode({ nonce: getNonce(), cspSource: 'http://localhost:3333' })
-  fs.writeFileSync(folder.path + '/prod/index.html', indexHTML, 'utf8')
+function makeFolders({ folder }) {
+  fs.mkdirSync(folder.path + "/prod", { recursive: true });
+  fs.mkdirSync(folder.path + "/prod/dist", { recursive: true });
+  fs.mkdirSync(folder.path + "/prod/dist/js", { recursive: true });
+  fs.mkdirSync(folder.path + "/src", { recursive: true });
+
+  fs.mkdirSync(folder.path + "/src/assets", { recursive: true });
+  fs.mkdirSync(folder.path + "/src/js", { recursive: true });
+  fs.mkdirSync(folder.path + "/src/js/boxes", { recursive: true });
+  fs.mkdirSync(folder.path + "/src/js/meta_backup", { recursive: true });
 }
 
-function makeFolders ({ folder }) {
-  fs.mkdirSync(folder.path + '/prod', { recursive: true })
-  fs.mkdirSync(folder.path + '/prod/dist', { recursive: true })
-  fs.mkdirSync(folder.path + '/prod/dist/js', { recursive: true })
-  fs.mkdirSync(folder.path + '/src', { recursive: true })
-
-  fs.mkdirSync(folder.path + '/src/assets', { recursive: true })
-  fs.mkdirSync(folder.path + '/src/js', { recursive: true })
-  fs.mkdirSync(folder.path + '/src/js/boxes', { recursive: true })
-  fs.mkdirSync(folder.path + '/src/js/meta_backup', { recursive: true })
-}
-
-function makeEntryJS ({ folder }) {
-  let codeJS = /* j sx */`import all from './boxes/*.js'
-import lowdb from 'lowdb'
-import Base from 'lowdb/adapters/Base'
+function makeEntryJS({ folder }) {
+  /* -----START---- */
+  /* -----START---- */
+  /* -----START---- */
+  /* -----START---- */
+  /* -----START---- */
+  let codeJS = /* jsx */ `import all from "./boxes/*.js";
+import lowdb from "lowdb";
+import Base from "lowdb/adapters/Base";
 
 class Memory extends Base {
   read() {
-    return this.defaultValue
+    return this.defaultValue;
   }
-  write () {
-  }
+  write() {}
 }
-let adapter = new Memory()
-export const db = lowdb(adapter)
+let adapter = new Memory();
+export const db = lowdb(adapter);
 
 window.StreamInput = (val) => {
-  db.setState(val).write()
-  window.dispatchEvent(new CustomEvent('sync-state', { detail: db.getState() }))
-  console.log(JSON.stringify(db.getState()))
+  db.setState(val).write();
+  window.dispatchEvent(
+    new CustomEvent("sync-state", { detail: db.getState() })
+  );
+  console.log(JSON.stringify(db.getState()));
+};
+
+if (process.env.NODE_ENV === "production") {
+  let meta = require("./meta.json");
+  db.defaults(meta).write();
 }
 
-if (process.env.NODE_ENV === 'production') {
-  let meta = require('./meta.json')
-  db.defaults(meta).write()
-}
+function godebug({ mounter }) {
+  let fncOutput = [];
+  for (let kn in all) {
+    if (all[kn].box) {
+      let result = all[kn].box();
+      fncOutput.push(JSON.stringify(result));
+    }
+  }
 
-function godebug ({ mounter }) {
   // debuggers
-  mounter.style.whiteSpacing = 'pre'
-  mounter.innerText = JSON.stringify(db.getState())
-  window.addEventListener('sync-state', ({ detail }) => {
-    mounter.innerText = JSON.stringify(detail)
-  })
+  mounter.style.whiteSpacing = "pre";
+  mounter.innerText = [
+    fncOutput.join("\n"),
+    JSON.stringify(db.getState()),
+  ].join("\n");
+  window.addEventListener("sync-state", ({ detail }) => {
+    mounter.innerText = [
+      fncOutput.join("\n"),
+      JSON.stringify(db.getState()),
+    ].join("\n");
+  });
 }
 
-function setup ({ mounter }) {
-  godebug({ mounter })
+function setup({ mounter }) {
+  godebug({ mounter });
 }
 
-export default setup
-export { setup }
-`
-  fs.writeFileSync(folder.path + '/src/js/entry.js', codeJS, 'utf8')
+export default setup;
+export { setup };
+
+`;
+  /* -----END---- */
+  /* -----END---- */
+  /* -----END---- */
+  /* -----END---- */
+  /* -----END---- */
+
+  fs.writeFileSync(folder.path + "/src/js/entry.js", codeJS, "utf8");
 }
 
-function makeBoxJSa ({ folder }) {
-  let codeJS = /* jsx */`
+function makeBoxJSa({ folder }) {
+  let codeJS = /* jsx */ `
   import moment from 'moment'
 export default () => {
   console.log('core.js', moment().calendar())
   return moment().calendar() + 'core' + Math.random()
 }
-  `
-  fs.writeFileSync(folder.path + '/src/js/boxes/core.js', codeJS, 'utf8')
+  `;
+  fs.writeFileSync(folder.path + "/src/js/boxes/core.js", codeJS, "utf8");
 }
 
-function makeBoxJSb ({ folder }) {
-  let codeJS = /* jsx */`
+function makeBoxJSb({ folder }) {
+  let codeJS = /* jsx */ `
 import moment from 'moment'
 export default () => {
   console.log('apple.js', moment().calendar())
   return moment().calendar() + 'apple'
 }
-  `
-  fs.writeFileSync(folder.path + '/src/js/boxes/apple.js', codeJS, 'utf8')
+  `;
+  fs.writeFileSync(folder.path + "/src/js/boxes/apple.js", codeJS, "utf8");
 }
 
-function makeMeta ({ folder }) {
-  let metaJSON = JSON.stringify({
-    "boxes": [],
-    "cables": [],
-    "slots": []
-  }, null, 2)
+function makeMeta({ folder }) {
+  let metaJSON = JSON.stringify(
+    {
+      boxes: [],
+      cables: [],
+      slots: [],
+    },
+    null,
+    2
+  );
 
-  fs.writeFileSync(folder.path + '/src/js/meta.json', metaJSON, 'utf8')
+  fs.writeFileSync(folder.path + "/src/js/meta.json", metaJSON, "utf8");
 }
 
-function makePackage ({ folder }) {
+function makePackage({ folder }) {
   let packageJSON = JSON.stringify({
-    "name": "effectnode-project",
-    "license": "MIT",
-    "devDependencies": {
+    name: "effectnode-project",
+    license: "MIT",
+    devDependencies: {
       "parcel-bundler": "*",
       "npm-run-all": "^0.0.0",
-      "serve": "*"
+      serve: "*",
     },
-    "scripts": {
-      "dev": "run-p watchjs start",
-      "watchjs": "parcel watch ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
-      "build": "NODE_ENV=production parcel build ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
-      "start": "serve ./prod"
+    scripts: {
+      dev: "run-p watchjs start",
+      watchjs:
+        "parcel watch ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
+      build:
+        "NODE_ENV=production parcel build ./src/js/entry.js --out-dir prod/dist/js --cache-dir cache --no-source-maps --global MyCanvas",
+      start: "serve ./prod",
     },
-    "dependencies": {
-      "lowdb": "^1.0.0",
-      "moment": "^2.29.1"
-    }
-  })
-  fs.writeFileSync(folder.path + '/package.json', packageJSON, 'utf8')
+    dependencies: {
+      lowdb: "^1.0.0",
+      moment: "^2.29.1",
+    },
+  });
+  fs.writeFileSync(folder.path + "/package.json", packageJSON, "utf8");
 }
 
-function makeGitIgnore ({ folder }) {
+function makeGitIgnore({ folder }) {
   let gitIgnore = `# See https://help.github.com/ignore-files/ for more about ignoring files.
 
 # dependencies
@@ -180,23 +217,25 @@ yarn-debug.log*
 yarn-error.log*
 .idea
 
-/cache`
+/cache`;
 
-  fs.writeFileSync(folder.path + '/.gitignore', gitIgnore, 'utf8')
+  fs.writeFileSync(folder.path + "/.gitignore", gitIgnore, "utf8");
 }
 
-module.exports.createProjectFiles = function createProjectFiles ({ folderPath }) {
+module.exports.createProjectFiles = function createProjectFiles({
+  folderPath,
+}) {
   // let fs = window.require('fs')
   // let path = window.require('path')
 
-  let folder = { path: folderPath }
+  let folder = { path: folderPath };
 
-  makeFolders({ folder })
-  writeHTML({ folder })
-  makeEntryJS({ folder })
-  makeBoxJSa({ folder })
-  makeBoxJSb({ folder })
-  makePackage({ folder })
-  makeMeta({ folder })
-  makeGitIgnore({ folder })
-}
+  makeFolders({ folder });
+  writeHTML({ folder });
+  makeEntryJS({ folder });
+  makeBoxJSa({ folder });
+  makeBoxJSb({ folder });
+  makePackage({ folder });
+  makeMeta({ folder });
+  makeGitIgnore({ folder });
+};

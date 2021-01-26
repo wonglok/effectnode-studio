@@ -6,8 +6,7 @@ const path = require("path");
 const isDev = require("electron-is-dev");
 const { ipcMain } = require("electron");
 
-
-ipcMain.handle('openWindow', async (event, args) => {
+ipcMain.handle("openWindow", async (event, args) => {
   let mainWindow = new BrowserWindow({
     width: isDev ? 1920 : 800,
     height: isDev ? 1080 * 2 : 600,
@@ -25,17 +24,17 @@ ipcMain.handle('openWindow', async (event, args) => {
       ? "http://localhost:3000"
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
-  mainWindow.maximize()
+  mainWindow.maximize();
 
-  return 'ans'
-})
+  return "ans";
+});
 
-ipcMain.handle('checkEmptyFolder', async (event, args) => {
+ipcMain.handle("checkEmptyFolder", async (event, args) => {
   const lstatSync = require("fs").lstatSync;
   const existsSync = require("fs").existsSync;
   const fs = require("fs");
   const path = require("path");
-  const { dialog } = require("electron")
+  const { dialog } = require("electron");
   var promise = await dialog.showOpenDialog({
     properties: ["openDirectory", "createDirectory"],
     createDirectory: true,
@@ -75,31 +74,30 @@ ipcMain.handle('checkEmptyFolder', async (event, args) => {
     if (vizfiles.length === 0) {
       return {
         ok: true,
-        folder: firstFolder.path
-      }
+        folder: firstFolder.path,
+      };
     } else {
-      return { ok: false, folder: false }
+      return { ok: false, folder: false };
     }
   }
 
-  return { ok: false, folder: false, cancel: true }
-})
+  return { ok: false, folder: false, cancel: true };
+});
 
+ipcMain.handle("createProjectFiles", async (event, folderPath) => {
+  return require("./template.js").createProjectFiles({ folderPath });
+});
 
-ipcMain.handle('createProjectFiles', async (event, folderPath) => {
-  return require('./template.js').createProjectFiles({ folderPath })
-})
-
-let selectFolder = async  () => {
-  const { dialog } = require("electron")
+let selectFolder = async () => {
+  const { dialog } = require("electron");
   var promise = await dialog.showOpenDialog({
     properties: ["openDirectory", "createDirectory"],
     createDirectory: true,
   });
-  const folderPath = promise.filePaths[0]
+  const folderPath = promise.filePaths[0];
 
-  return folderPath
-}
+  return folderPath;
+};
 
 let checkFolderPath = (folderPath) => {
   const fs = require("fs-extra");
@@ -108,25 +106,24 @@ let checkFolderPath = (folderPath) => {
   let check = [
     fs.existsSync(path.join(folderPath, "/package.json")),
     fs.existsSync(path.join(folderPath, "/src/js/meta.json")),
-    fs.existsSync(path.join(folderPath, "/src/js/entry.js"))
-  ]
-  if (check.filter(e => e === false).length === 0) {
-    return { ok: true, folder: folderPath }
+    fs.existsSync(path.join(folderPath, "/src/js/entry.js")),
+  ];
+  if (check.filter((e) => e === false).length === 0) {
+    return { ok: true, folder: folderPath };
   } else {
-    return { ok: false, folder: false }
+    return { ok: false, folder: false };
   }
-}
+};
 
-ipcMain.handle('selectCheckProjectFolder', async (event) => {
-  const folderPath = await selectFolder()
+ipcMain.handle("selectCheckProjectFolder", async (event) => {
+  const folderPath = await selectFolder();
   if (folderPath) {
-    return checkFolderPath(folderPath)
+    return checkFolderPath(folderPath);
   } else {
-    return { ok: false, cancel: true }
+    return { ok: false, cancel: true };
   }
-})
+});
 
-ipcMain.handle('onlyCheckProjectFolder', async (event, folderPath) => {
-  return checkFolderPath(folderPath)
-})
-
+ipcMain.handle("onlyCheckProjectFolder", async (event, folderPath) => {
+  return checkFolderPath(folderPath);
+});

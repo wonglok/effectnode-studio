@@ -17,6 +17,7 @@ export function PreviewBox() {
   }, []);
 
   /*
+  // displayName
   server = {
       port,
       pack: async () => {
@@ -36,7 +37,9 @@ export function PreviewBox() {
   */
 
   useEffect(() => {
-    let sendJS = () => {
+    let clean = () => {};
+
+    let streamState = () => {
       if (webview.current) {
         try {
           webview.current.executeJavaScript(`
@@ -52,23 +55,23 @@ export function PreviewBox() {
       }
     };
 
-    let flush = () => {
+    let flushAfterRefresh = () => {
       let once = () => {
-        sendJS();
+        streamState();
         webview.current.removeEventListener("dom-ready", once);
       };
       webview.current.addEventListener("dom-ready", once);
-      sendJS();
+      streamState();
     };
 
-    let clean = () => {};
     webview.current.src = `http://localhost:${server.port}?r=${0}`;
-    flush();
+    flushAfterRefresh();
+
     if (server && server.onDonePack) {
       clean = server.onDonePack(({ port }) => {
         if (webview.current) {
           webview.current.src = `http://localhost:${port}?r=${Math.random()}`;
-          flush();
+          flushAfterRefresh();
         }
       });
     }
@@ -76,8 +79,10 @@ export function PreviewBox() {
     // webview.current.src = previewURL;
     // console.log(previewURL);
 
+    window.addEventListener("stream-to-webview", streamState);
     return () => {
       clean();
+      window.removeEventListener("stream-to-webview", streamState);
     };
   });
 
@@ -87,3 +92,12 @@ export function PreviewBox() {
     </div>
   );
 }
+
+// boxA has textureA
+// render data into textureA
+
+// boxB hs textureB
+// read textureA then render data into textureB
+
+// boxB uses textureA
+// render data into textureB

@@ -5,6 +5,7 @@ import { makeUseWinBoxStore } from "../core/winbox.js";
 import { WindowBox } from "../ui/WindowBox.js";
 import slugify from "slugify";
 import { runServer } from "../core/server.js";
+import { useBoxes } from "../core/codebox.js";
 // let electron = window.require('electron');
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -29,7 +30,11 @@ export const getLowDB = ({ projectRoot }) => {
     const low = window.require("lowdb");
     const Memory = window.require("lowdb/adapters/Memory");
     const adapter = new Memory();
-    adapter.write = () => {};
+    adapter.write = () => {
+      // setTimeout(() => {
+      //   window.dispatchEvent(new CustomEvent("stream-to-webview"));
+      // }, 10);
+    };
     const db = low(adapter);
 
     const text = fs.readFileSync(projectRoot + "/src/js/meta.json", "utf-8");
@@ -55,6 +60,8 @@ export function Project() {
   const useWinBox = makeUseWinBoxStore(slug);
   const [server, setServer] = useState(false);
   const db = getLowDB({ projectRoot: root });
+  const boxesUtil = useBoxes({ db, root });
+
   useEffect(() => {
     let clean = () => {};
 
@@ -76,7 +83,7 @@ export function Project() {
     <Layout title={"Project Editor"}>
       <div style={{ height: "calc(100% - 60px)" }} className="">
         <ProjectContext.Provider
-          value={{ root, slug, useWinBox, server, lowdb: db }}
+          value={{ root, slug, useWinBox, server, lowdb: db, boxesUtil }}
         >
           <div className={"h-full w-full relative"}>
             <WindowBox></WindowBox>
