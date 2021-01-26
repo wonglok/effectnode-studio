@@ -1,11 +1,13 @@
+import slugify from "slugify";
+import create from "zustand";
 /* eslint-disable react-hooks/exhaustive-deps */
 // let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`
 
-let cache = false;
+let dbCache = false;
 
 export const getLowDB = ({ filePath }) => {
-  if (cache) {
-    return cache;
+  if (dbCache) {
+    return dbCache;
   } else {
     const fs = window.require("fs");
     const low = window.require("lowdb");
@@ -25,7 +27,13 @@ export const getLowDB = ({ filePath }) => {
       console.log(e);
     }
 
-    cache = db;
-    return cache;
+    dbCache = db;
+    return dbCache;
   }
+};
+
+export const makeUseEngine = ({ projectRoot }) => {
+  return create((set, get) => {
+    return {};
+  });
 };

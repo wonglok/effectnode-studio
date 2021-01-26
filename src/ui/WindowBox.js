@@ -164,6 +164,7 @@ export function AlwaysHereWindow({ children, name, pos }) {
   let onSave = async (rect) => {
     await save({ doc: rect });
     setDoc(rect);
+    window.dispatchEvent(new CustomEvent("winbox-layout", { detail: {} }));
   };
 
   return (
