@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useRef } from "react";
 import { ProjectContext } from "../pages/Project";
 
@@ -33,18 +34,21 @@ export function PreviewBox() {
       },
     }
   */
+
   useEffect(() => {
     let sendJS = () => {
-      try {
-        webview.current.executeJavaScript(`
-        if (window.StreamInput) {
-          window.StreamInput(${JSON.stringify(lowdb.getState())});
-        } else {
-          console.log('window.StreamInput not found');
+      if (webview.current) {
+        try {
+          webview.current.executeJavaScript(`
+          if (window.StreamInput) {
+            window.StreamInput(${JSON.stringify(lowdb.getState())});
+          } else {
+            console.log('window.StreamInput not found');
+          }
+        `);
+        } catch (e) {
+          console.log(e);
         }
-      `);
-      } catch (e) {
-        console.log(e);
       }
     };
 
@@ -62,8 +66,10 @@ export function PreviewBox() {
     flush();
     if (server && server.onDonePack) {
       clean = server.onDonePack(({ port }) => {
-        webview.current.src = `http://localhost:${port}?r=${Math.random()}`;
-        flush();
+        if (webview.current) {
+          webview.current.src = `http://localhost:${port}?r=${Math.random()}`;
+          flush();
+        }
       });
     }
 
