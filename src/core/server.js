@@ -73,9 +73,7 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
     bundler.on("buildEnd", () => {
       // Do something...
       console.log("done-packing");
-      window.dispatchEvent(
-        new CustomEvent("done-packing", { detail: { port } })
-      );
+      window.dispatchEvent(new CustomEvent("done-packing", { detail: {} }));
     });
 
     bundler.on("buildError", (error) => {
@@ -84,9 +82,7 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
 
     bundler.on("bundled", (bundle) => {
       console.log("done-packing", bundle);
-      window.dispatchEvent(
-        new CustomEvent("done-packing", { detail: { port } })
-      );
+      window.dispatchEvent(new CustomEvent("done-packing", { detail: {} }));
       // bundler contains all assets and bundles, see documentation for details
     });
 
@@ -101,9 +97,13 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
         await bundler.bundle();
       },
       onDonePack: (donePack) => {
-        window.addEventListener("done-packing", donePack);
+        window.addEventListener("done-packing", () => {
+          donePack({ port });
+        });
         return () => {
-          window.removeEventListener("done-packing", donePack);
+          window.removeEventListener("done-packing", () => {
+            donePack({ port });
+          });
         };
       },
     });

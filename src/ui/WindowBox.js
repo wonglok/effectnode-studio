@@ -2,6 +2,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useDrag } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
+import { PreviewBox } from "./PreviewBox.js";
 
 export function WindowTemplate({
   children,
@@ -81,8 +82,14 @@ export function WindowTemplate({
   const onZIndex = () => {
     let zidx = winboxes.map((e) => e.zIndex || 0);
     let max = Math.max(...zidx) || 1;
-    if (max > 1000000) {
+    if (max >= 65535) {
       max = 0;
+    }
+    if (max === Infinity) {
+      max = 0;
+    }
+    if (rect.zIndex === Infinity) {
+      rect.zIndex = 0;
     }
     onChange({ ...rect, zIndex: max + 1 });
   };
@@ -266,7 +273,7 @@ export function WindowBox({ children }) {
           y: 10,
         }}
       >
-        preview
+        <PreviewBox></PreviewBox>
       </AlwaysHereWindow>
 
       {children}

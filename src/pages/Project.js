@@ -20,13 +20,41 @@ export function slugger(str) {
   });
 }
 
+let DBCache = new Map();
+export const getLowDB = ({ projectRoot }) => {
+  if (DBCache.has(projectRoot)) {
+    return DBCache.get(projectRoot);
+  } else {
+    const fs = window.require("fs");
+    const low = window.require("lowdb");
+    const Memory = window.require("lowdb/adapters/Memory");
+    const adapter = new Memory();
+    adapter.write = () => {};
+    const db = low(adapter);
+
+    const text = fs.readFileSync(projectRoot + "/src/js/meta.json", "utf-8");
+
+    let json = {};
+
+    try {
+      json = JSON.parse(text);
+      db.setState(json);
+    } catch (e) {
+      console.log(e);
+    }
+
+    DBCache.set(projectRoot, db);
+    return db;
+  }
+};
+
 export function Project() {
   const query = useQuery();
   const root = decodeURIComponent(query.get("url"));
   const slug = slugger(root);
   const useWinBox = makeUseWinBoxStore(slug);
   const [server, setServer] = useState(false);
-
+  const db = getLowDB({ projectRoot: root });
   useEffect(() => {
     let clean = () => {};
 
@@ -47,7 +75,9 @@ export function Project() {
   return (
     <Layout title={"Project Editor"}>
       <div style={{ height: "calc(100% - 60px)" }} className="">
-        <ProjectContext.Provider value={{ root, slug, useWinBox, server }}>
+        <ProjectContext.Provider
+          value={{ root, slug, useWinBox, server, lowdb: db }}
+        >
           <div className={"h-full w-full relative"}>
             <WindowBox></WindowBox>
           </div>
