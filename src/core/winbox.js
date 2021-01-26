@@ -46,6 +46,7 @@ export const makeUseWinBoxStore = (groupID) =>
           w: 300,
           h: 300,
           ...pos,
+          zIndex: 0,
           hidden: false,
         };
       },

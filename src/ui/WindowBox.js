@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useState } from "react";
 import { useDrag } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
@@ -9,6 +10,9 @@ export function WindowTemplate({
   showToolBtn = true,
   onChange = () => {},
 }) {
+  const { useWinBox } = useContext(ProjectContext);
+  const winboxes = useWinBox((s) => s.winboxes);
+
   const [rect, set] = useState(initVal || { x: 0, y: 0, w: 100, h: 100 });
   const toolbar = useDrag(({ down, delta: [dx, dy] }) => {
     if (down) {
@@ -16,6 +20,7 @@ export function WindowTemplate({
     }
     if (!down) {
       onChange(rect);
+      onZIndex();
     }
   });
 
@@ -73,14 +78,26 @@ export function WindowTemplate({
     onChange({ ...rect, hidden: true });
   };
 
+  const onZIndex = () => {
+    let zidx = winboxes.map((e) => e.zIndex || 0);
+    let max = Math.max(...zidx) || 1;
+    if (max > 1000000) {
+      max = 0;
+    }
+    onChange({ ...rect, zIndex: max + 1 });
+  };
+
   return (
     <div
+      onMouseDown={onZIndex}
       className={
-        "absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg"
+        " border absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg"
       }
       style={{
+        zIndex: 10 + (rect.zIndex || 0),
         width: `${rect.w}px`,
         height: `${rect.h}px`,
+        borderColor: "#003E42",
         transform: `translate3d(${rect.x}px, ${rect.y}px, 0px)`,
       }}
     >
@@ -116,7 +133,9 @@ export function WindowTemplate({
         className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 left-1 bg-blue-500 cursor-move"
         {...resizerBL()}
       ></div>
-      <div style={{ height: `${rect.h - 25}px` }}>{children}</div>
+      <div onMouseDown={onZIndex} style={{ height: `${rect.h - 25}px` }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -141,9 +160,12 @@ export function AlwaysHereWindow({ children, name, pos }) {
       }
     });
   }, [name]);
+
   let onSave = async (rect) => {
     await save({ doc: rect });
+    setDoc(rect);
   };
+
   return (
     doc && (
       <WindowTemplate
@@ -156,6 +178,7 @@ export function AlwaysHereWindow({ children, name, pos }) {
       </WindowTemplate>
     )
   );
+
   // let [doc, ssDoc] = useState(false);
   // let slugName = slug(name);
   // const { useWins } = useContext(ProjectContext);
