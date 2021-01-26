@@ -32,9 +32,9 @@ export const useBoxes = ({ db, root }) => {
       { leading: true, trailing: true }
     );
 
-    window.addEventListener("save-state", saver);
+    window.addEventListener("try-save-state", saver);
     return () => {
-      window.removeEventListener("save-state", saver);
+      window.removeEventListener("try-save-state", saver);
     };
   });
 
@@ -46,12 +46,12 @@ export const useBoxes = ({ db, root }) => {
       })
       .write();
 
-    window.dispatchEvent(new Event("save-state"));
+    window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
   };
 
   const addBox = async () => {
-    const state = db.getState();
+    // const state = db.getState();
 
     let _id = getID();
 
@@ -92,7 +92,7 @@ module.exports.box = () => {
       "utf-8"
     );
 
-    window.dispatchEvent(new Event("save-state"));
+    window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
     window.dispatchEvent(new Event("reoad-page"));
   };
@@ -102,7 +102,7 @@ module.exports.box = () => {
     db.get("boxes").remove({ _id }).write();
     fs.removeSync(resolvePath({ box: box }));
 
-    window.dispatchEvent(new Event("save-state"));
+    window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
     window.dispatchEvent(new Event("reoad-page"));
   };
