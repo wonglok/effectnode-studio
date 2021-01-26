@@ -45,6 +45,7 @@ export const useBoxes = ({ db, root }) => {
         ...box,
       })
       .write();
+
     window.dispatchEvent(new Event("save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
   };
@@ -65,7 +66,7 @@ export const useBoxes = ({ db, root }) => {
     let filePath = path.join(root, `./src/js/boxes/${file}`);
     db.get("boxes")
       .push({
-        isProtected: state.boxes.length === 0,
+        isProtected: false,
         isUserBoxes: true,
         _id,
         x: 20,
@@ -84,7 +85,7 @@ export const useBoxes = ({ db, root }) => {
       /* jsx */ `
 module.exports.box = () => {
   return {
-    name: ${JSON.stringify(name)},
+    name: ${JSON.stringify(displayName)},
   }
 }
     `,
@@ -93,6 +94,7 @@ module.exports.box = () => {
 
     window.dispatchEvent(new Event("save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
+    window.dispatchEvent(new Event("reoad-page"));
   };
 
   const removeBox = async ({ box }) => {
@@ -102,6 +104,7 @@ module.exports.box = () => {
 
     window.dispatchEvent(new Event("save-state"));
     window.dispatchEvent(new Event("stream-to-webview"));
+    window.dispatchEvent(new Event("reoad-page"));
   };
 
   const resolvePath = ({ box }) => {

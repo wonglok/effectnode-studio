@@ -56,6 +56,7 @@ export function PreviewBox() {
     };
 
     let flushAfterRefresh = () => {
+      webview.current.src = `http://localhost:${server.port}?r=${0}`;
       let once = () => {
         streamState();
         webview.current.removeEventListener("dom-ready", once);
@@ -64,13 +65,11 @@ export function PreviewBox() {
       streamState();
     };
 
-    webview.current.src = `http://localhost:${server.port}?r=${0}`;
     flushAfterRefresh();
 
     if (server && server.onDonePack) {
       clean = server.onDonePack(({ port }) => {
         if (webview.current) {
-          webview.current.src = `http://localhost:${port}?r=${Math.random()}`;
           flushAfterRefresh();
         }
       });
@@ -79,9 +78,11 @@ export function PreviewBox() {
     // webview.current.src = previewURL;
     // console.log(previewURL);
 
+    window.addEventListener("reload-page", flushAfterRefresh);
     window.addEventListener("stream-to-webview", streamState);
     return () => {
       clean();
+      window.removeEventListener("reload-page", flushAfterRefresh);
       window.removeEventListener("stream-to-webview", streamState);
     };
   });
