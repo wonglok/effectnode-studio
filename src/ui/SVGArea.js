@@ -134,7 +134,7 @@ export function Box({
         onClick={() =>
           onClickOutput({ type: "output", box, slotName: "output" })
         }
-        id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}`}
+        id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}${"output"}`}
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
         cy={CONNECTOR_RADIUS * 1.5 + boxHeight}
@@ -160,7 +160,32 @@ export function Box({
   const svgP = pt.matrixTransform( svg.getScreenCTM().inverse() );
  */
 
-function AutoFlipLine({ x1, x2, y1, y2, distortion = 0, force = false }) {
+function AutoFlipLine({
+  x1,
+  x2,
+  y1,
+  y2,
+  animated = false,
+  reverse = false,
+  distortion = 0,
+  force = false,
+}) {
+  let [offsetAnim, setOffset] = useState(0);
+  useEffect(() => {
+    let tt = setInterval(() => {
+      let factor = 1;
+      if (reverse) {
+        factor = -1;
+      }
+      if (animated) {
+        setOffset((s) => s + factor * 5);
+      }
+    }, 16.7);
+    return () => {
+      clearInterval(tt);
+    };
+  });
+
   let dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) * 0.5;
   dist += dist * distortion;
 
@@ -185,7 +210,9 @@ C${x1},${y1 + dist * factorY} ${x2},${y2 + dist * -factorY}
 ${x2},${y2}`}
       fill="none"
       stroke="#bababa"
+      strokeDasharray="24"
       strokeWidth="1.5px"
+      strokeDashoffset={offsetAnim}
     />
   ) : (
     <path
@@ -199,6 +226,8 @@ ${x2},${y2}`}
       fill="none"
       stroke="#bababa"
       strokeWidth="1.5px"
+      strokeDasharray="24"
+      strokeDashoffset={offsetAnim}
     />
   );
 }
@@ -210,9 +239,10 @@ function HandLine({ svg, hand }) {
   useEffect(() => {
     let onMM = () => {
       let element = false;
+
       if (hand.type === "output") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}${hand.slotName}`
         );
       } else if (hand.type === "input") {
         element = svg.querySelector(
@@ -274,6 +304,8 @@ function HandLine({ svg, hand }) {
           y1={y1}
           x2={x2}
           y2={y2}
+          animated={true}
+          reverse={hand.type === "input"}
         ></AutoFlipLine>
       )}
     </g>
@@ -354,6 +386,18 @@ export function SVGEditor({ rect, state }) {
     let filePath = boxesUtil.resolvePath({ box });
     ipcRenderer.send("open", filePath, root);
   };
+
+  useEffect(() => {
+    let esc = (ev) => {
+      if (ev.key === "esc" || ev.keyCode === 27) {
+        setHandMode(false);
+      }
+    };
+    window.addEventListener("keypress", esc);
+    return () => {
+      window.removeEventListener("keypress", esc);
+    };
+  });
 
   return (
     <svg
