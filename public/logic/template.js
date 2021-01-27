@@ -66,7 +66,9 @@ function makeEntryJS({ folder }) {
   /* ----- START ---- */
   /* ----- START ---- */
 
-  let codeJS = /* jsx */ `import "regenerator-runtime/runtime";
+  let codeJS = /* jsx */ `
+
+import "regenerator-runtime/runtime";
 import BoxScripts from "./boxes/*.js";
 import lowdb from "lowdb";
 import Base from "lowdb/adapters/Base";
@@ -131,23 +133,23 @@ function MyCore({ mounter }) {
     for (let box of boxes) {
       let onChangeState = (cb) => {
         let lastClean = () => {};
-        window.addEventListener("refresh-state", () => {
-          lastClean();
-          lastClean = cb({ state: db.getState() });
+        window.addEventListener("refresh-state", async () => {
+          typeof lastClean === 'function' && lastClean();
+          lastClean = await cb({ state: db.getState() });
         });
-        lastClean = cb({ state: db.getState() });
+        lastClean = await cb({ state: db.getState() });
       };
-      let onChangeBox = (cb) => {
+      let onChangeBox = async (cb) => {
         let lastClean = () => {};
-        window.addEventListener("refresh-state", () => {
-          lastClean();
+        window.addEventListener("refresh-state", async () => {
+          typeof lastClean === 'function' && lastClean();
           let state = db.getState();
           let newBox = boxes.find((e) => e.moduleName === box.moduleName);
-          lastClean = cb({ state, box: newBox });
+          lastClean = await cb({ state, box: newBox });
         });
         let state = db.getState();
         let newBox = boxes.find((e) => e.moduleName === box.moduleName);
-        lastClean = cb({ state, box: newBox });
+        lastClean = await cb({ state, box: newBox });
       };
       let args = {
         context,
@@ -171,6 +173,7 @@ function main({ mounter }) {
 
 export default main;
 export { main };
+
 
 `;
 
@@ -236,10 +239,10 @@ module.exports.box = ({ onChangeBox, context, domElement }) => {
     text: "a 123, b 123, c 123 ",
   });
 
-  onChangeBox(({ box, boxes }) => {
-    domElement.innerHTML = box.moduleName + "_" + Math.random();
+  onChangeBox(async ({ box, boxes }) => {
+    domElement.innerHTML += box.moduleName + "_" + Math.random();
     return () => {
-      domElement.innerHTML = "<br/>";
+      domElement.innerHTML += "<br/>";
     };
   });
 
@@ -247,7 +250,6 @@ module.exports.box = ({ onChangeBox, context, domElement }) => {
     name: "app",
   };
 };
-
 `;
 
   fs.writeFileSync(folder.path + "/src/js/meta.json", metaJSON, "utf8");
