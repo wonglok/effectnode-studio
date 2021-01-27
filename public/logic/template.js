@@ -60,12 +60,13 @@ function makeFolders({ folder }) {
 }
 
 function makeEntryJS({ folder }) {
-  /* -----START---- */
-  /* -----START---- */
-  /* -----START---- */
-  /* -----START---- */
-  /* -----START---- */
-  let codeJS = /* jsx */ `import all from "./boxes/*.js";
+  /* ----- START ---- */
+  /* ----- START ---- */
+  /* ----- START ---- */
+  /* ----- START ---- */
+  /* ----- START ---- */
+
+  let codeJS = /* jsx */ `import BoxScripts from "./boxes/*.js";
 import lowdb from "lowdb";
 import Base from "lowdb/adapters/Base";
 
@@ -80,48 +81,102 @@ export const db = lowdb(adapter);
 
 window.StreamInput = (val) => {
   db.setState(val).write();
+
   window.dispatchEvent(
-    new CustomEvent("sync-state", { detail: db.getState() })
+    new CustomEvent("refresh-state", { detail: db.getState() })
   );
-  console.log(JSON.stringify(db.getState()));
+
+  // console.log(JSON.stringify(db.getState()));
 };
 
 if (process.env.NODE_ENV === "production") {
   let meta = require("./meta.json");
-  db.defaults(meta).write();
+  db.setState(meta).write();
 }
 
-function godebug({ mounter }) {
-  let fncOutput = [];
-  for (let kn in all) {
-    if (all[kn].box) {
-      let result = all[kn].box();
-      fncOutput.push(JSON.stringify(result));
+const onReady = (cb) => {
+  let tt = setInterval(() => {
+    let state = db.getState();
+    if (state && state.boxes && state.cables) {
+      clearTimeout(tt);
+      cb();
     }
-  }
+  });
+};
 
-  // debuggers
-  mounter.style.whiteSpacing = "pre";
-  mounter.innerText = [
-    fncOutput.join("\n"),
-    JSON.stringify(db.getState()),
-  ].join("\n");
-  window.addEventListener("sync-state", ({ detail }) => {
-    mounter.innerText = [
-      fncOutput.join("\n"),
-      JSON.stringify(db.getState()),
-    ].join("\n");
+function MyCableCore({ mounter }) {
+  let state = db.getState();
+
+  let runEachModule = () => {
+    let boxes = state.boxes;
+
+    for (let box of boxes) {
+      console.log(box.fileName);
+    }
+  };
+
+  runEachModule();
+  //
+
+  // console.log(state.boxes);
+
+  // let fncOutput = [];
+  // for (let kn in BoxScripts) {
+  //   console.log(kn);
+  //   let boxScript = BoxScripts[kn];
+  //   if (boxScript && boxScript.box) {
+  //     let result = boxScript.box({ domElement: mounter });
+  //     fncOutput.push({
+  //       key: kn,
+  //       module: result,
+  //     });
+  //   }
+  // }
+
+  return;
+}
+
+// const MY_DEBUGGGGGERS = function ({ mounter }) {
+//   let div = document.createElement("div");
+//   let fncOutput = [];
+
+//   for (let kn in BoxScripts) {
+//     if (BoxScripts[kn] && BoxScripts[kn].box) {
+//       let result = BoxScripts[kn].box();
+//       fncOutput.push(JSON.stringify(result));
+//     }
+//   }
+
+//   // debuggers
+//   div.style.whiteSpacing = "pre";
+//   div.innerText = [fncOutput.join("----"), JSON.stringify(db.getState())].join(
+//     "----"
+//   );
+//   window.addEventListener("refresh-state", ({ detail }) => {
+//     div.innerText = [
+//       fncOutput.join("----"),
+//       JSON.stringify(db.getState()),
+//     ].join("----");
+//   });
+
+//   mounter.appendChild(div);
+// };
+
+function main({ mounter }) {
+  onReady(() => {
+    // MY_DEBUGGGGGERS({ mounter });
+    MyCableCore({ mounter });
   });
 }
 
-function setup({ mounter }) {
-  godebug({ mounter });
-}
+export default main;
+export { main };
 
-export default setup;
-export { setup };
 
-`;
+
+
+  `;
+
   /* -----END---- */
   /* -----END---- */
   /* -----END---- */
@@ -156,15 +211,42 @@ export default () => {
 function makeMeta({ folder }) {
   let metaJSON = JSON.stringify(
     {
-      boxes: [],
+      JS_FOLDER: "./src/js/",
+      BOXES_FOLDER: "./src/js/boxes",
+      boxes: [
+        {
+          isFirstUserBox: true,
+          isProtected: true,
+          isUserBoxes: true,
+          _id: "AAA",
+          x: 19.741943359375,
+          y: 60,
+          displayName: "app",
+          moduleName: "AAA__ID__app",
+          fileName: "AAA__ID__app.js",
+          slug: "app",
+        },
+      ],
       cables: [],
       slots: [],
     },
     null,
     2
   );
+  let startingAppFile = `
+  module.exports.box = () => {
+    return {
+      name: "app",
+    }
+  }
+`;
 
   fs.writeFileSync(folder.path + "/src/js/meta.json", metaJSON, "utf8");
+  fs.writeFileSync(
+    folder.path + "/src/js/boxes/AAA__ID__app.js",
+    startingAppFile,
+    "utf8"
+  );
 }
 
 function makePackage({ folder }) {

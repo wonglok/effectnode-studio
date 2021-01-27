@@ -79,11 +79,11 @@ export function PreviewBox() {
     // console.log(previewURL);
 
     window.addEventListener("reload-page", flushAfterRefresh);
-    window.addEventListener("stream-to-webview", streamState);
+    window.addEventListener("stream-state-to-webview", streamState);
     return () => {
       clean();
       window.removeEventListener("reload-page", flushAfterRefresh);
-      window.removeEventListener("stream-to-webview", streamState);
+      window.removeEventListener("stream-state-to-webview", streamState);
     };
   });
 

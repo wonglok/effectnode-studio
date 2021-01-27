@@ -79,6 +79,7 @@ export function SVGEditor({ rect, state }) {
   const addModule = () => {
     addBox();
   };
+
   return (
     <svg
       {...bind()}

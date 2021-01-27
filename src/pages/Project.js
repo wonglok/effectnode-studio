@@ -32,7 +32,7 @@ export const getLowDB = ({ projectRoot }) => {
     const adapter = new Memory();
     adapter.write = () => {
       // setTimeout(() => {
-      //   window.dispatchEvent(new CustomEvent("stream-to-webview"));
+      //   window.dispatchEvent(new CustomEvent("stream-state-to-webview"));
       // }, 10);
     };
     const db = low(adapter);

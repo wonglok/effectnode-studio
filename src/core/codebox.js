@@ -5,6 +5,7 @@ const smalltalk = require("smalltalk");
 let path = window.require("path");
 let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`;
 let fs = window.require("fs-extra");
+
 function makeSlug(str) {
   return slugify(str, {
     replacement: "_", // replace spaces with replacement character, defaults to `-`
@@ -47,11 +48,14 @@ export const useBoxes = ({ db, root }) => {
       .write();
 
     window.dispatchEvent(new Event("try-save-state"));
-    window.dispatchEvent(new Event("stream-to-webview"));
+    window.dispatchEvent(new Event("stream-state-to-webview"));
   };
 
+  const sepToken = `__ID__`;
+
   const addBox = async () => {
-    // const state = db.getState();
+    const state = db.getState();
+    const boxes = state.boxes;
 
     let _id = getID();
 
@@ -60,20 +64,23 @@ export const useBoxes = ({ db, root }) => {
       "Example: newbox"
     );
     let name = displayName || "box";
-    name = makeSlug(name);
+    let slug = makeSlug(name);
 
-    let file = `${_id}__ID__${name}.js`;
-    let filePath = path.join(root, `./src/js/boxes/${file}`);
+    let moduleName = `${_id}${sepToken}${slug}`;
+    let fileName = `${moduleName}.js`;
+    let filePath = path.join(root, `./src/js/boxes/${fileName}`);
     db.get("boxes")
       .push({
+        isFirstUserBox: boxes.length === 0,
         isProtected: false,
         isUserBoxes: true,
         _id,
         x: 20,
-        y: 60,
+        y: 60 + 55 * boxes.length,
         displayName,
-        name,
-        file,
+        moduleName,
+        fileName,
+        slug,
       })
       .write();
 
@@ -93,7 +100,7 @@ module.exports.box = () => {
     );
 
     window.dispatchEvent(new Event("try-save-state"));
-    window.dispatchEvent(new Event("stream-to-webview"));
+    window.dispatchEvent(new Event("stream-state-to-webview"));
     window.dispatchEvent(new Event("reoad-page"));
   };
 
@@ -103,19 +110,22 @@ module.exports.box = () => {
     fs.removeSync(resolvePath({ box: box }));
 
     window.dispatchEvent(new Event("try-save-state"));
-    window.dispatchEvent(new Event("stream-to-webview"));
+    window.dispatchEvent(new Event("stream-state-to-webview"));
     window.dispatchEvent(new Event("reoad-page"));
   };
 
   const resolvePath = ({ box }) => {
+    // fileName
     let path = window.require("path");
-
+    let state = db.getState();
+    let JS_FOLDER = state.JS_FOLDER;
+    let BOXES_FOLDER = state.BOXES_FOLDER;
     if (box.isEntry) {
-      return path.join(root, "src/js/", box.file);
+      return path.join(root, JS_FOLDER, box.fileName);
     } else if (box.isUserBoxes) {
-      return path.join(root, "src/js/boxes", box.file);
+      return path.join(root, BOXES_FOLDER, box.fileName);
     } else {
-      return path.join(root, "src/js/boxes", box.file);
+      return path.join(root, BOXES_FOLDER, box.fileName);
     }
   };
 

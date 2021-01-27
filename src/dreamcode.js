@@ -1,19 +1,27 @@
+//
 
+module.exports = ({ effect }) => {
+  effect(async ({ context, loop, inputs, output, box, state }) => {
+    let camera = await context.get("camera");
 
-module.exports = ({ globals, createEffect }) => {
-  let camera = await globals.get('camera')
+    let iiA = inputs("A");
+    let ooB = output("B");
 
-  createEffect(async ({ loop, inputs, output }) => {
-    let inputA = inputs('A')
-    let outputB = output('B')
+    let myService = {
+      playVideo: () => {
+        console.log("play video");
+      },
+    };
 
-    loop(() => {
+    loop(() => {});
 
-    })
+    iiA.onData((data) => {
+      ooB.sendData(data);
+    });
 
-    inputA.onData((data) => {
-      outputB.sendData(data)
-    })
-  })
-
-}
+    context.set("videoPlayer", myService);
+    return () => {
+      // cleanup
+    };
+  });
+};

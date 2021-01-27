@@ -97,26 +97,11 @@ export function Box({ box, graphRefresh = () => {} }) {
   );
 }
 
-export function EntryCore() {
-  // const { root } = useContext(ProjectContext);
-  const coreBox = {
-    isEntry: true,
-    isFixed: true,
-    isProtected: true,
-    _id: "AAAAAAA",
-    x: 130,
-    y: 10,
-    name: "Main Entry Function",
-    file: "entry.js",
-  };
-  return <Box box={coreBox}></Box>;
-}
-
 export function SVGEditor({ rect, state }) {
   const [rID, refresh] = useState(0);
 
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const { boxesUtil } = useContext(ProjectContext);
+  const { boxesUtil, root } = useContext(ProjectContext);
   // const { addBox } = useWorkbench({ projectRoot: url });
 
   const bind = useWheel(({ wheeling, delta: [dx, dy] }) => {
@@ -138,6 +123,16 @@ export function SVGEditor({ rect, state }) {
     // console.log(lowdb.get("boxes").value());
   };
 
+  let openCore = () => {
+    let { ipcRenderer } = window.require("electron");
+    let box = {
+      isEntry: true,
+      fileName: "entry.js",
+    };
+    let filePath = boxesUtil.resolvePath({ box });
+    ipcRenderer.send("open", filePath, root);
+  };
+
   return (
     <svg
       {...bind()}
@@ -146,11 +141,28 @@ export function SVGEditor({ rect, state }) {
       height={rect.height}
       viewBox={`${pan.x} ${pan.y} ${rect.width} ${rect.height}`}
     >
-      <text x={10} y={10 + 17} onClick={addModule} fontSize="17" fill="white">
+      <text
+        x={10 + pan.x}
+        y={10 + 17 + pan.y}
+        onClick={addModule}
+        fontSize="17"
+        fill="white"
+        className="underline"
+      >
         Add Module
       </text>
+
+      <text
+        x={"Edit Entry File".length * 7 + 10 + pan.x}
+        y={10 + 17 + pan.y}
+        onClick={openCore}
+        fontSize="17"
+        fill="white"
+        className="underline"
+      >
+        Edit Entry File
+      </text>
       {boxes}
-      <EntryCore></EntryCore>
     </svg>
   );
 }
