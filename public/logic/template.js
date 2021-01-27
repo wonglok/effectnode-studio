@@ -215,8 +215,8 @@ export { main };
 function makeMeta({ folder }) {
   let metaJSON = JSON.stringify(
     {
-      JS_FOLDER: "./src/js/",
-      BOXES_FOLDER: "./src/js/boxes",
+      // JS_FOLDER: "./src/js/",
+      // BOXES_FOLDER: "./src/js/boxes",
       boxes: [
         {
           isFirstUserBox: true,

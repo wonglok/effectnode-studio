@@ -17,8 +17,9 @@ const CONNECTOR_RADIUS = 6.5;
 export function Box({
   box,
   graphRefresh = () => {},
-  onClickDot = () => {},
+  onClickOutput = () => {},
   onClickBox = () => {},
+  onClickInput = () => {},
 }) {
   const [rID, refresh] = useState(0);
   const { boxesUtil, root } = useContext(ProjectContext);
@@ -114,8 +115,12 @@ export function Box({
       {/* Input, Green */}
       <circle
         style={{ cursor: "pointer" }}
-        onClick={() => onClickDot({ type: "input", box, index: 0 })}
-        id={`${BOX_SEPERATOR}${box.moduleName}${INPUT_SEPERATOR}${0}`}
+        onClick={() =>
+          onClickInput({ type: "input", box, slotName: "SLOT_ADS123" })
+        }
+        id={`${BOX_SEPERATOR}${
+          box.moduleName
+        }${INPUT_SEPERATOR}${"SLOT_ADS123"}`}
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 1.0}
         cy={-CONNECTOR_RADIUS * 1.5}
@@ -126,7 +131,9 @@ export function Box({
       {/* Output Blue */}
       <circle
         style={{ cursor: "pointer" }}
-        onClick={() => onClickDot({ type: "output", box })}
+        onClick={() =>
+          onClickOutput({ type: "output", box, slotName: "output" })
+        }
         id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}`}
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
@@ -196,28 +203,20 @@ ${x2},${y2}`}
   );
 }
 
-function HandLine({
-  svg,
-  handType = "output",
-  handBox = {},
-  dotIndex = 0,
-  visible = false,
-}) {
-  // let [show, setShow] = useState(false);
-  let [[x2, y2], sxy2] = useState([0, 0]);
+function HandLine({ svg, hand }) {
   let [[x1, y1], sxy1] = useState([0, 0]);
+  let [[x2, y2], sxy2] = useState([0, 0]);
 
   useEffect(() => {
-    let onMM = (ev) => {
-      const pt = svg.createSVGPoint();
+    let onMM = () => {
       let element = false;
-      if (handType === "output") {
+      if (hand.type === "output") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${handBox.moduleName}${OUTPUT_SEPERATOR}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}`
         );
-      } else if (handType === "input") {
+      } else if (hand.type === "input") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${handBox.moduleName}${INPUT_SEPERATOR}${dotIndex}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${INPUT_SEPERATOR}${hand.slotName}`
         );
       }
 
@@ -225,23 +224,22 @@ function HandLine({
         return;
       }
 
+      const pt = svg.createSVGPoint();
       let rPt = element.getBoundingClientRect();
-      // let rSVG = svg.getBoundingClientRect();
-      // pass event coordinates
 
       pt.y = rPt.top;
       pt.x = rPt.left;
 
       // transform to SVG coordinates
       const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-
       sxy2([svgP.x + CONNECTOR_RADIUS, svgP.y + CONNECTOR_RADIUS]);
     };
     svg.addEventListener("mousemove", onMM);
+    onMM();
     return () => {
       svg.removeEventListener("mousemove", onMM);
     };
-  }, [dotIndex, handBox, handType, visible]);
+  }, [hand]);
 
   useEffect(() => {
     let onMM = (ev) => {
@@ -263,9 +261,13 @@ function HandLine({
     };
   }, []);
 
+  let canShow = () => {
+    return x1 + y1 !== 0;
+  };
+
   return (
     <g>
-      {visible && (
+      {canShow() && (
         <AutoFlipLine
           distortion={0}
           x1={x1}
@@ -281,15 +283,7 @@ function HandLine({
 export function SVGEditor({ rect, state }) {
   const svg = useRef();
   const [rID, refresh] = useState(0);
-  const [
-    { visible, type: handType, index: dotIndex, box: handBox },
-    setHandMode,
-  ] = useState({
-    type: "output",
-    index: 0,
-    box: false,
-    visible: false,
-  });
+  const [hand, setHandMode] = useState(false);
 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const { boxesUtil, root } = useContext(ProjectContext);
@@ -309,18 +303,35 @@ export function SVGEditor({ rect, state }) {
         key={e._id}
         box={e}
         onClickBox={({ box }) => {
-          // if (box.moduleName !== e.moduleName) {
-          //   setHandMode(false);
-          // } else {
-          //   setHandMode(!visible);
-          // }
-          // setHandMode(false);
+          if (!hand.visible) {
+            setHandMode((m) => ({
+              type: "output",
+              slotName: "output",
+              box: box,
+              visible: true,
+            }));
+          }
         }}
-        onClickDot={({ type, index, box }) => {
-          // setHandMode(!visible);
-          // console.log(123);
-
-          setHandMode((m) => ({ ...m, type, index, box, visible: true }));
+        onClickInput={({ type, slotName, box }) => {
+          if (!hand.visible) {
+            setHandMode((m) => ({
+              type,
+              slotName,
+              box: box,
+              visible: true,
+            }));
+          }
+        }}
+        onClickOutput={({ type, slotName, box }) => {
+          if (!hand.visible) {
+            setHandMode((m) => ({
+              type,
+              slotName,
+              box: box,
+              visible: true,
+            }));
+          } else {
+          }
         }}
         graphRefresh={refresh}
       ></Box>
@@ -354,7 +365,7 @@ export function SVGEditor({ rect, state }) {
       viewBox={`${pan.x} ${pan.y} ${rect.width} ${rect.height}`}
     >
       <rect
-        onClick={() => setHandMode((s) => ({ ...s, visible: false }))}
+        onClick={() => setHandMode(false)}
         x={pan.x}
         y={pan.y}
         width={rect.width}
@@ -383,15 +394,8 @@ export function SVGEditor({ rect, state }) {
         Edit Entry File
       </text>
 
-      {svg.current && (
-        <HandLine
-          xy2={[200, 200]}
-          visible={visible}
-          svg={svg.current}
-          handType={handType}
-          handBox={handBox}
-          dotIndex={dotIndex}
-        ></HandLine>
+      {svg.current && hand && (
+        <HandLine xy2={[200, 200]} svg={svg.current} hand={hand}></HandLine>
       )}
 
       {boxes}

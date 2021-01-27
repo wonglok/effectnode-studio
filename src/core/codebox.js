@@ -15,16 +15,16 @@ function makeSlug(str) {
 }
 
 export const useBoxes = ({ db, root }) => {
-  useEffect(() => {
-    let saveInstant = (json) => {
-      // let tag = moment().format('YYYY-MM-DD__[time]__hh-mm-ss-a') + '__randomID_' + getID()
-      fs.writeFileSync(
-        path.join(root, "./src/js/meta.json"),
-        JSON.stringify(json, null, "\t"),
-        "utf-8"
-      );
-    };
+  let saveInstant = (json) => {
+    // let tag = moment().format('YYYY-MM-DD__[time]__hh-mm-ss-a') + '__randomID_' + getID()
+    fs.writeFileSync(
+      path.join(root, "./src/js/meta.json"),
+      JSON.stringify(json, null, "\t"),
+      "utf-8"
+    );
+  };
 
+  useEffect(() => {
     let saver = _.debounce(
       () => {
         saveInstant(db.getState());
@@ -85,7 +85,6 @@ export const useBoxes = ({ db, root }) => {
       .write();
 
     fs.ensureDirSync(path.join(root, `./src/js/boxes/`));
-
     fs.ensureFileSync(filePath);
     fs.writeFileSync(
       filePath,
@@ -114,12 +113,30 @@ module.exports.box = () => {
     window.dispatchEvent(new Event("reoad-page"));
   };
 
+  let addCable = ({ outputBoxID, inputBoxID, inputSlotID }) => {
+    let _id = getID();
+
+    db.get("cables")
+      .push({
+        _id,
+        outputBoxID,
+        inputBoxID,
+        inputSlotID,
+      })
+      .write();
+
+    saveInstant(db.getState());
+    // window.dispatchEvent(new Event("stream-state-to-webview"));
+    window.dispatchEvent(new Event("reoad-page"));
+  };
+
   const resolvePath = ({ box }) => {
     // fileName
     let path = window.require("path");
-    let state = db.getState();
-    let JS_FOLDER = state.JS_FOLDER;
-    let BOXES_FOLDER = state.BOXES_FOLDER;
+    // let state = db.getState();
+    let JS_FOLDER = "./src/js";
+    let BOXES_FOLDER = "./src/js/boxes";
+
     if (box.isEntry) {
       return path.join(root, JS_FOLDER, box.fileName);
     } else if (box.isUserBoxes) {
@@ -130,6 +147,8 @@ module.exports.box = () => {
   };
 
   return {
+    addCable,
+
     resolvePath,
     updateBox,
     removeBox,
