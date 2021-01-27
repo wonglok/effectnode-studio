@@ -1,20 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ProjectContext } from "../pages/Project";
 
 export function PreviewBox() {
+  const scroller = useRef();
   const webview = useRef();
   const { server, lowdb } = useContext(ProjectContext);
 
-  useEffect(() => {
-    let logger = (e) => {
-      console.log(`[GUEST]`, e.message);
-    };
-    webview.current.addEventListener("console-message", logger);
-    return () => {
-      webview.current.removeEventListener("console-message", logger);
-    };
-  }, []);
+  // useEffect(() => {
+  //   let logger = (e) => {
+  //     console.log(`[GUEST]`, e.message);
+  //   };
+  //   webview.current.addEventListener("console-message", logger);
+  //   return () => {
+  //     webview.current.removeEventListener("console-message", logger);
+  //   };
+  // }, []);
 
   /*
   // displayName
@@ -75,9 +76,6 @@ export function PreviewBox() {
       });
     }
 
-    // webview.current.src = previewURL;
-    // console.log(previewURL);
-
     window.addEventListener("reload-page", flushAfterRefresh);
     window.addEventListener("stream-state-to-webview", streamState);
     return () => {
@@ -87,9 +85,45 @@ export function PreviewBox() {
     };
   });
 
+  useEffect(() => {
+    let logger = (e) => {
+      if (!webview.current) {
+        return;
+      }
+
+      if (scroller.current) {
+        let domList = scroller.current.querySelectorAll(".MY_LOG");
+        if (domList.length >= 100) {
+          for (let i = 0; i < domList.length; i++) {
+            if (i < domList.length - 100) {
+              domList[i].remove();
+            }
+          }
+        }
+        let div = document.createElement("div");
+        div.innerHTML = `<div
+          class="MY_LOG p-1 mt-1 text-sm border bg-yellow-200 whitespace-pre mb-4"
+        >${e.message}</div>`;
+        scroller.current.appendChild(div);
+
+        scroller.current.scrollTop = scroller.current.scrollHeight;
+      }
+    };
+
+    webview.current.addEventListener("console-message", logger);
+    return () => {
+      webview.current.removeEventListener("console-message", logger);
+    };
+  }, []);
+
   return (
     <div className="h-full w-full">
-      <webview ref={webview} className="h-full"></webview>
+      <webview ref={webview} style={{ height: "calc(100% - 250px)" }}></webview>
+      <div
+        className={"w-full overflow-scroll"}
+        ref={scroller}
+        style={{ height: `250px` }}
+      ></div>
     </div>
   );
 }
@@ -102,3 +136,5 @@ export function PreviewBox() {
 
 // boxB uses textureA
 // render data into textureB
+
+//

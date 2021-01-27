@@ -66,7 +66,8 @@ function makeEntryJS({ folder }) {
   /* ----- START ---- */
   /* ----- START ---- */
 
-  let codeJS = /* jsx */ `import BoxScripts from "./boxes/*.js";
+  let codeJS = /* jsx */ `import "regenerator-runtime/runtime";
+import BoxScripts from "./boxes/*.js";
 import lowdb from "lowdb";
 import Base from "lowdb/adapters/Base";
 
@@ -85,8 +86,6 @@ window.StreamInput = (val) => {
   window.dispatchEvent(
     new CustomEvent("refresh-state", { detail: db.getState() })
   );
-
-  // console.log(JSON.stringify(db.getState()));
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -104,75 +103,52 @@ const onReady = (cb) => {
   });
 };
 
-function MyCableCore({ mounter }) {
-  let state = db.getState();
+function MyCore({ mounter }) {
+  let globalMap = new Map();
+  let context = {
+    get: (name) => {
+      return new Promise((resolve) => {
+        let tt = setInterval(() => {
+          if (globalMap.has(name)) {
+            clearInterval(tt);
+            resolve(globalMap.get(name));
+          }
+        });
+      });
+    },
+    set: async (name, val) => {
+      globalMap.set(name, val);
+      return val;
+    },
+  };
 
   let runEachModule = () => {
-    let boxes = state.boxes;
+    let boxes = db.getState().boxes;
 
     for (let box of boxes) {
-      console.log(box.fileName);
+      let setup = (hookFunc) => {
+        hookFunc({ context, box, boxes });
+      };
+      let args = {
+        setup,
+        domElement: mounter,
+      };
+      BoxScripts[box.moduleName].box(args);
     }
   };
 
   runEachModule();
-  //
-
-  // console.log(state.boxes);
-
-  // let fncOutput = [];
-  // for (let kn in BoxScripts) {
-  //   console.log(kn);
-  //   let boxScript = BoxScripts[kn];
-  //   if (boxScript && boxScript.box) {
-  //     let result = boxScript.box({ domElement: mounter });
-  //     fncOutput.push({
-  //       key: kn,
-  //       module: result,
-  //     });
-  //   }
-  // }
-
   return;
 }
 
-// const MY_DEBUGGGGGERS = function ({ mounter }) {
-//   let div = document.createElement("div");
-//   let fncOutput = [];
-
-//   for (let kn in BoxScripts) {
-//     if (BoxScripts[kn] && BoxScripts[kn].box) {
-//       let result = BoxScripts[kn].box();
-//       fncOutput.push(JSON.stringify(result));
-//     }
-//   }
-
-//   // debuggers
-//   div.style.whiteSpacing = "pre";
-//   div.innerText = [fncOutput.join("----"), JSON.stringify(db.getState())].join(
-//     "----"
-//   );
-//   window.addEventListener("refresh-state", ({ detail }) => {
-//     div.innerText = [
-//       fncOutput.join("----"),
-//       JSON.stringify(db.getState()),
-//     ].join("----");
-//   });
-
-//   mounter.appendChild(div);
-// };
-
 function main({ mounter }) {
   onReady(() => {
-    // MY_DEBUGGGGGERS({ mounter });
-    MyCableCore({ mounter });
+    MyCore({ mounter });
   });
 }
 
 export default main;
 export { main };
-
-
 
 
   `;

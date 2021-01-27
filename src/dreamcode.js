@@ -1,27 +1,19 @@
-//
+module.exports.box = ({ setup, domElement }) => {
+  //--BEGIN---
 
-module.exports = ({ effect }) => {
-  effect(async ({ context, loop, inputs, output, box, state }) => {
-    let camera = await context.get("camera");
-
-    let iiA = inputs("A");
-    let ooB = output("B");
-
-    let myService = {
-      playVideo: () => {
-        console.log("play video");
-      },
-    };
-
-    loop(() => {});
-
-    iiA.onData((data) => {
-      ooB.sendData(data);
+  setup(({ context, box, boxes }) => {
+    context.set("video", {
+      text: "a 123, b 123, c 123 ",
     });
 
-    context.set("videoPlayer", myService);
-    return () => {
-      // cleanup
-    };
+    context.get("video").then((e) => {
+      domElement.innerHTML = e.text + JSON.stringify(boxes);
+    });
   });
+
+  //--END---
+
+  return {
+    name: "app",
+  };
 };
