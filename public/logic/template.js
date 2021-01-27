@@ -86,6 +86,7 @@ window.StreamInput = (val) => {
   window.dispatchEvent(
     new CustomEvent("refresh-state", { detail: db.getState() })
   );
+  // console.log(JSON.stringify(db.getState()));
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -105,6 +106,8 @@ const onReady = (cb) => {
 
 function MyCore({ mounter }) {
   let globalMap = new Map();
+  let cleanMap = new Map();
+  let signatureMap = new Map();
   let context = {
     get: (name) => {
       return new Promise((resolve) => {
@@ -126,11 +129,30 @@ function MyCore({ mounter }) {
     let boxes = db.getState().boxes;
 
     for (let box of boxes) {
-      let setup = (hookFunc) => {
-        hookFunc({ context, box, boxes });
+      let onChangeState = (cb) => {
+        let lastClean = () => {};
+        window.addEventListener("refresh-state", () => {
+          lastClean();
+          lastClean = cb({ state: db.getState() });
+        });
+        lastClean = cb({ state: db.getState() });
+      };
+      let onChangeBox = (cb) => {
+        let lastClean = () => {};
+        window.addEventListener("refresh-state", () => {
+          lastClean();
+          let state = db.getState();
+          let newBox = boxes.find((e) => e.moduleName === box.moduleName);
+          lastClean = cb({ state, box: newBox });
+        });
+        let state = db.getState();
+        let newBox = boxes.find((e) => e.moduleName === box.moduleName);
+        lastClean = cb({ state, box: newBox });
       };
       let args = {
-        setup,
+        context,
+        onChangeBox,
+        onChangeState,
         domElement: mounter,
       };
       BoxScripts[box.moduleName].box(args);
@@ -150,8 +172,7 @@ function main({ mounter }) {
 export default main;
 export { main };
 
-
-  `;
+`;
 
   /* -----END---- */
   /* -----END---- */
@@ -210,11 +231,23 @@ function makeMeta({ folder }) {
     2
   );
   let startingAppFile = `
-  module.exports.box = () => {
-    return {
-      name: "app",
-    }
-  }
+module.exports.box = ({ onChangeBox, context, domElement }) => {
+  context.set("video", {
+    text: "a 123, b 123, c 123 ",
+  });
+
+  onChangeBox(({ box, boxes }) => {
+    domElement.innerHTML = box.moduleName + "_" + Math.random();
+    return () => {
+      domElement.innerHTML = "<br/>";
+    };
+  });
+
+  return {
+    name: "app",
+  };
+};
+
 `;
 
   fs.writeFileSync(folder.path + "/src/js/meta.json", metaJSON, "utf8");
