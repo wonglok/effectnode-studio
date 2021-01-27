@@ -37,7 +37,9 @@ export const RecentItem = ({ doc, alt }) => {
   let removeDoc = useProjectRoots((s) => s.removeDoc);
   let openDoc = ({ doc }) => {
     if (fs.existsSync(doc.path + "/package.json")) {
-      window.location.assign(`/project?url=${encodeURIComponent(doc.path)}`);
+      window.location.hash = String(
+        `/project?url=${encodeURIComponent(doc.path)}`
+      );
     } else {
       window.alert("no project found");
     }
@@ -172,7 +174,9 @@ export function IntroPage() {
   let openProject = ({ folder }) => {
     let fs = window.require("fs-extra");
     if (fs.existsSync(folder.path + "/package.json")) {
-      window.location.assign(`/project?url=${encodeURIComponent(folder.path)}`);
+      window.location.hash = String(
+        `/project?url=${encodeURIComponent(folder.path)}`
+      );
       console.log("open project");
     } else {
       window.alert("no project found");

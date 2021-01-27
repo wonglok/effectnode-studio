@@ -182,8 +182,21 @@ export function AlwaysHereWindow({ children, name, pos }) {
   let onSave = async (rect) => {
     await save({ doc: rect });
     setDoc(rect);
-    window.dispatchEvent(new CustomEvent("winbox-layout", { detail: {} }));
+    window.dispatchEvent(
+      new CustomEvent("winbox-needs-layout", { detail: {} })
+    );
   };
+
+  useEffect(() => {
+    let layout = async () => {
+      let doc = await getDoc({ _id: getSlug(name) });
+      setDoc({ ...doc });
+    };
+    window.addEventListener("winbox-needs-layout", layout);
+    return () => {
+      window.removeEventListener("winbox-needs-layout", layout);
+    };
+  }, [name]);
 
   return (
     doc && (
@@ -203,13 +216,13 @@ export function WindowBox({ children }) {
   // let { useWinBox } = useContext(ProjectContext);
 
   return (
-    <div className={"relative"}>
+    <div className={"relative h-full"}>
       <AlwaysHereWindow
         name="Main Editor"
         pos={{
           x: 10,
           y: 10,
-          w: window.innerWidth * 0.3333,
+          w: window.innerWidth * 0.45,
           h: window.innerHeight * 0.7,
         }}
       >
@@ -219,9 +232,9 @@ export function WindowBox({ children }) {
       <AlwaysHereWindow
         name="Preview Box"
         pos={{
-          w: window.innerWidth * 0.3,
+          w: window.innerWidth * 0.45,
           h: window.innerHeight - 20 - 130,
-          x: window.innerWidth - window.innerWidth * 0.3 - 10,
+          x: window.innerWidth - window.innerWidth * 0.45 - 10,
           y: 10,
         }}
       >
@@ -229,6 +242,69 @@ export function WindowBox({ children }) {
       </AlwaysHereWindow>
 
       {children}
+
+      <TaskBarSet></TaskBarSet>
+    </div>
+  );
+}
+
+function TaskBtn({ children, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className="px-3 inline-flex items-center bg-opacity-25 bg-white h-full cursor-pointer select-none mr-2 rounded-xl"
+    >
+      {children}
+    </div>
+  );
+}
+
+export function TaskBarSet() {
+  const { useWinBox } = useContext(ProjectContext);
+  let getSlug = useWinBox((s) => s.getSlug);
+  let save = useWinBox((s) => s.save);
+  // const winboxes = useWinBox((s) => s.winboxes);
+  let resetWindow = async (name, pos) => {
+    let slugName = getSlug(name);
+    let doc = { _id: slugName, name, ...pos, hidden: false };
+    await save({ doc });
+    window.dispatchEvent(
+      new CustomEvent("winbox-needs-layout", { detail: {} })
+    );
+  };
+
+  let relayoutAll = () => {
+    relayoutEditor();
+    relayoutPreview();
+  };
+
+  let relayoutEditor = () => {
+    resetWindow("Main Editor", {
+      x: 10,
+      y: 10,
+      w: window.innerWidth * 0.45,
+      h: window.innerHeight * 0.7,
+    });
+  };
+
+  let relayoutPreview = () => {
+    resetWindow("Preview Box", {
+      w: window.innerWidth * 0.45,
+      h: window.innerHeight - 20 - 130,
+      x: window.innerWidth - window.innerWidth * 0.45 - 10,
+      y: 10,
+    });
+  };
+
+  return (
+    <div
+      className={
+        "absolute bottom-0 left-0 w-full bg-opacity-25 bg-black h-12 p-2"
+      }
+    >
+      <TaskBtn onClick={relayoutAll}>Relayout Windows</TaskBtn>
+      {/* <TaskBtn onClick={relayoutEditor}>Main Editor</TaskBtn>
+    <TaskBtn onClick={relayoutPreview}>Preview Box</TaskBtn> */}
     </div>
   );
 }

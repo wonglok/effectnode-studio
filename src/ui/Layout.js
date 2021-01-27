@@ -5,7 +5,7 @@ export function Layout({ title, children }) {
   useEffect(() => {
     document.body.style.backgroundColor = `#003E42`;
     return () => {
-      document.body.style.backgroundColor = "";
+      // document.body.style.backgroundColor = "";
     };
   });
 
@@ -26,7 +26,7 @@ export function Layout({ title, children }) {
 
 function Link({ to, style, children }) {
   return (
-    <a style={style} href={to}>
+    <a style={style} href={`/index.html#${to}`}>
       {children}
     </a>
   );

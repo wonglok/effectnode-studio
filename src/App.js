@@ -5,6 +5,7 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
+  HashRouter,
   // useHistory
 } from "react-router-dom";
 import "./globals.css";
@@ -33,7 +34,7 @@ import { Project } from "./pages/Project";
 export default function App() {
   return (
     <div className="full">
-      <Router>
+      <HashRouter>
         <Switch>
           {/* <Route path={'/editor/:docID'}>
             <EditorPage></EditorPage>
@@ -48,14 +49,14 @@ export default function App() {
             <OpenFolderPage></OpenFolderPage>
           </Route> */}
 
-          <Route path={'/project'}>
+          <Route path={"/project"}>
             <Project></Project>
           </Route>
           <Route path={"/"}>
             <Welcome></Welcome>
           </Route>
         </Switch>
-      </Router>
+      </HashRouter>
     </div>
   );
 }

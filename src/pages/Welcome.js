@@ -40,8 +40,11 @@ export const RecentItem = ({ doc, alt }) => {
       "onlyCheckProjectFolder",
       doc.path
     );
+
     if (ok) {
-      window.location.assign(`/project?url=${encodeURIComponent(folder)}`);
+      window.location.hash = String(
+        `/project?url=${encodeURIComponent(folder)}`
+      );
     } else {
       window.alert("Folder dont have project files");
       throw new Error(`folder dont have project files`);
@@ -125,7 +128,9 @@ export function Welcome() {
       if (ok) {
         await electron.ipcRenderer.invoke("createProjectFiles", folder);
         await saveFav({ folderPath: folder });
-        window.location.assign(`/project?url=${encodeURIComponent(folder)}`);
+        window.location.hash = String(
+          `/project?url=${encodeURIComponent(folder)}`
+        );
       } else {
         if (!cancel) {
           window.alert("Please Select Empty Folder.");
@@ -143,7 +148,9 @@ export function Welcome() {
       );
       if (ok) {
         await saveFav({ folderPath: folder });
-        window.location.assign(`/project?url=${encodeURIComponent(folder)}`);
+        window.location.hash = String(
+          `/project?url=${encodeURIComponent(folder)}`
+        );
       } else {
         if (!cancel) {
           window.alert("Folder dont have project files");

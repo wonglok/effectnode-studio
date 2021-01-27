@@ -110,8 +110,17 @@ export function PreviewBox() {
       }
     };
 
+    let resetLogs = () => {
+      let domList = scroller.current.querySelectorAll(".MY_LOG");
+      for (let i = 0; i < domList.length; i++) {
+        domList[i].remove();
+      }
+    };
+
+    window.addEventListener("reload-page", resetLogs);
     webview.current.addEventListener("console-message", logger);
     return () => {
+      window.removeEventListener("reload-page", resetLogs);
       webview.current.removeEventListener("console-message", logger);
     };
   }, []);

@@ -155,7 +155,7 @@ export function watchFiles({ projectRoot, onTree = () => {} }) {
   watcher.on("error", function (err) {
     // handle error
     console.log(err);
-    window.location.assign("/");
+    // window.location.assign("/");
   });
 
   watcher.on("ready", function () {

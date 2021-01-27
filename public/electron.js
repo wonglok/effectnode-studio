@@ -65,7 +65,9 @@ function createWindow() {
     app.exit(0);
   });
 
-  mainWindow.webContents.openDevTools();
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 }
 
 app.on("ready", createWindow);

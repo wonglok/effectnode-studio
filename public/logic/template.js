@@ -88,6 +88,7 @@ window.StreamInput = (val) => {
   window.dispatchEvent(
     new CustomEvent("refresh-state", { detail: db.getState() })
   );
+
   // console.log(JSON.stringify(db.getState()));
 };
 
@@ -108,8 +109,6 @@ const onReady = (cb) => {
 
 function MyCore({ mounter }) {
   let globalMap = new Map();
-  let cleanMap = new Map();
-  let signatureMap = new Map();
   let context = {
     get: (name) => {
       return new Promise((resolve) => {
@@ -131,18 +130,19 @@ function MyCore({ mounter }) {
     let boxes = db.getState().boxes;
 
     for (let box of boxes) {
-      let onChangeState = (cb) => {
+      let onChangeRootState = async (cb) => {
         let lastClean = () => {};
         window.addEventListener("refresh-state", async () => {
-          typeof lastClean === 'function' && lastClean();
+          typeof lastClean === "function" && (await lastClean());
           lastClean = await cb({ state: db.getState() });
         });
         lastClean = await cb({ state: db.getState() });
       };
+
       let onChangeBox = async (cb) => {
         let lastClean = () => {};
         window.addEventListener("refresh-state", async () => {
-          typeof lastClean === 'function' && lastClean();
+          typeof lastClean === "function" && (await lastClean());
           let state = db.getState();
           let newBox = boxes.find((e) => e.moduleName === box.moduleName);
           lastClean = await cb({ state, box: newBox });
@@ -151,10 +151,14 @@ function MyCore({ mounter }) {
         let newBox = boxes.find((e) => e.moduleName === box.moduleName);
         lastClean = await cb({ state, box: newBox });
       };
+
       let args = {
+        log: (data) => {
+          console.log(JSON.stringify(data, null, "    "));
+        },
         context,
         onChangeBox,
-        onChangeState,
+        onChangeRootState,
         domElement: mounter,
       };
       BoxScripts[box.moduleName].box(args);
@@ -186,27 +190,27 @@ export { main };
   fs.writeFileSync(folder.path + "/src/js/entry.js", codeJS, "utf8");
 }
 
-function makeBoxJSa({ folder }) {
-  let codeJS = /* jsx */ `
-  import moment from 'moment'
-export default () => {
-  console.log('core.js', moment().calendar())
-  return moment().calendar() + 'core' + Math.random()
-}
-  `;
-  fs.writeFileSync(folder.path + "/src/js/boxes/core.js", codeJS, "utf8");
-}
+// function makeBoxJSa({ folder }) {
+//   let codeJS = /* jsx */ `
+//   import moment from 'moment'
+// export default () => {
+//   console.log('core.js', moment().calendar())
+//   return moment().calendar() + 'core' + Math.random()
+// }
+//   `;
+//   fs.writeFileSync(folder.path + "/src/js/boxes/core.js", codeJS, "utf8");
+// }
 
-function makeBoxJSb({ folder }) {
-  let codeJS = /* jsx */ `
-import moment from 'moment'
-export default () => {
-  console.log('apple.js', moment().calendar())
-  return moment().calendar() + 'apple'
-}
-  `;
-  fs.writeFileSync(folder.path + "/src/js/boxes/apple.js", codeJS, "utf8");
-}
+// function makeBoxJSb({ folder }) {
+//   let codeJS = /* jsx */ `
+// import moment from 'moment'
+// export default () => {
+//   console.log('apple.js', moment().calendar())
+//   return moment().calendar() + 'apple'
+// }
+//   `;
+//   fs.writeFileSync(folder.path + "/src/js/boxes/apple.js", codeJS, "utf8");
+// }
 
 function makeMeta({ folder }) {
   let metaJSON = JSON.stringify(
@@ -234,15 +238,30 @@ function makeMeta({ folder }) {
     2
   );
   let startingAppFile = `
-module.exports.box = ({ onChangeBox, context, domElement }) => {
-  context.set("video", {
-    text: "a 123, b 123, c 123 ",
+module.exports.box = ({
+  log,
+  onChangeBox,
+  context,
+  domElement,
+  onChangeRootState,
+}) => {
+  context.set("videoModule", {
+    text: "test a 123, b 123, c 123 ",
+  });
+  context.get("videoModule").then((val) => {
+    log(val);
   });
 
+  let sleep = (t) => new Promise((resolve) => setTimeout(resolve, t));
+
   onChangeBox(async ({ box, boxes }) => {
-    domElement.innerHTML += box.moduleName + "_" + Math.random();
-    return () => {
-      domElement.innerHTML += "<br/>";
+    domElement.innerHTML = "running";
+    await sleep(1000);
+    domElement.innerHTML = box.moduleName + "_" + Math.random();
+
+    return async () => {
+      domElement.innerHTML = "cleaning";
+      await sleep(1000);
     };
   });
 
@@ -250,6 +269,8 @@ module.exports.box = ({ onChangeBox, context, domElement }) => {
     name: "app",
   };
 };
+
+
 `;
 
   fs.writeFileSync(folder.path + "/src/js/meta.json", metaJSON, "utf8");
@@ -326,9 +347,10 @@ module.exports.createProjectFiles = function createProjectFiles({
   makeFolders({ folder });
   writeHTML({ folder });
   makeEntryJS({ folder });
-  makeBoxJSa({ folder });
-  makeBoxJSb({ folder });
-  makePackage({ folder });
   makeMeta({ folder });
+
+  // makeBoxJSa({ folder });
+  // makeBoxJSb({ folder });
+  makePackage({ folder });
   makeGitIgnore({ folder });
 };
