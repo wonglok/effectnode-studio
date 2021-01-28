@@ -76,7 +76,7 @@ function MenuArea({ toggleMenu }) {
   return (
     <div
       className="fixed z-20 top-0 left-0 h-full w-full bg-black bg-opacity-90"
-      style={{ fontSize: "24px" }}
+      style={{ fontSize: "24px", zIndex: 100000000 }}
     >
       <div
         className={"mb-4"}
@@ -100,6 +100,7 @@ function MenuCloseBtn({ toggleMenu, isMobile }) {
       style={{
         marginRight: isMobile ? "20px" : "25px",
         marginTop: isMobile ? "20px" : "20px",
+        zIndex: 100000000,
       }}
     >
       <svg

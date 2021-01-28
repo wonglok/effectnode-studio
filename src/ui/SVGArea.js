@@ -190,7 +190,7 @@ function AutoFlipLine({
         factor = -1;
       }
       if (animated) {
-        setOffset((s) => s + factor * 5);
+        setOffset((s) => s + factor * 2.5);
       }
     }, 16.7);
     return () => {
@@ -324,7 +324,13 @@ function HandLine({ svg, hand }) {
   );
 }
 
-let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
+let LogicCable = ({
+  show = ["cable", "close"],
+  svg,
+  state,
+  cable,
+  refresh = () => {},
+}) => {
   let [[x1, y1], setPt1] = useState([0, 0]);
   let [[x2, y2], setPt2] = useState([0, 0]);
   let onSVGCoord = (svg, dotEl) => {
@@ -347,6 +353,7 @@ let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
     let outputSlotDOM = document.querySelector(
       `#${BOX_SEPERATOR}${outputBox.moduleName}${OUTPUT_SEPERATOR}${"output"}`
     );
+
     let inputSlotDOM = document.querySelector(
       `#${BOX_SEPERATOR}${inputBox.moduleName}${INPUT_SEPERATOR}${inputSlot._id}`
     );
@@ -356,7 +363,7 @@ let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
       setPt2(onSVGCoord(svg, outputSlotDOM));
     }
 
-    let dragBox = ({ detail: { boxID } }) => {
+    let dragbox = ({ detail: { boxID } }) => {
       if (boxID === inputBox._id || boxID === outputBox._id) {
         if (outputSlotDOM && inputSlotDOM) {
           setPt1(onSVGCoord(svg, inputSlotDOM));
@@ -364,107 +371,67 @@ let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
         }
       }
     };
-    window.addEventListener("dragged-box", dragBox);
+    window.addEventListener("dragged-box", dragbox);
     return () => {
-      window.removeEventListener("dragged-box", dragBox);
+      window.removeEventListener("dragged-box", dragbox);
     };
-  }, [cable, inputBox, outputBox]);
-  return (
-    <g>
-      <AutoFlipLine
-        distortion={0}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        force={"v"}
-        animated={true}
-        reverse={false}
-      ></AutoFlipLine>
-    </g>
-  );
-};
-
-let CloseBtn = ({ svg, state, cable, refresh = () => {} }) => {
-  let [[x1, y1], setPt1] = useState([0, 0]);
-  let [[x2, y2], setPt2] = useState([0, 0]);
-  let onSVGCoord = (svg, dotEl) => {
-    const pt = svg.createSVGPoint();
-    let rPt = dotEl.getBoundingClientRect();
-
-    pt.y = rPt.top;
-    pt.x = rPt.left;
-
-    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-    return [svgP.x + CONNECTOR_RADIUS, svgP.y + CONNECTOR_RADIUS];
-  };
-
-  let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
-  let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
-
-  useEffect(() => {
-    let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
-
-    let outputSlotDOM = document.querySelector(
-      `#${BOX_SEPERATOR}${outputBox.moduleName}${OUTPUT_SEPERATOR}${"output"}`
-    );
-    let inputSlotDOM = document.querySelector(
-      `#${BOX_SEPERATOR}${inputBox.moduleName}${INPUT_SEPERATOR}${inputSlot._id}`
-    );
-
-    if (outputSlotDOM && inputSlotDOM) {
-      setPt1(onSVGCoord(svg, inputSlotDOM));
-      setPt2(onSVGCoord(svg, outputSlotDOM));
-    }
-
-    window.addEventListener("dragged-box", ({ detail: { boxID } }) => {
-      if (boxID === inputBox._id || boxID === outputBox._id) {
-        if (outputSlotDOM && inputSlotDOM) {
-          setPt1(onSVGCoord(svg, inputSlotDOM));
-          setPt2(onSVGCoord(svg, outputSlotDOM));
-        }
-      }
-    });
   }, [cable, inputBox, outputBox]);
 
   let [opacity, setOpacity] = useState(0.15);
   let { boxesUtil } = useContext(ProjectContext);
+
   return (
     <g>
-      <circle
-        style={{ opacity: opacity }}
-        onMouseOver={() => {
-          setOpacity(1);
-        }}
-        onMouseLeave={() => {
-          setOpacity(0.15);
-        }}
-        onClick={() => {
-          boxesUtil.removeCable({ cableID: cable._id });
-          refresh((s) => s + 1);
-        }}
-        fill={"#ffffff"}
-        r={10}
-        cx={(x1 + x2) / 2}
-        cy={(y1 + y2) / 2}
-      ></circle>
-      <circle
-        style={{ opacity: opacity }}
-        onMouseOver={() => {
-          setOpacity(1);
-        }}
-        onMouseLeave={() => {
-          setOpacity(0.15);
-        }}
-        onClick={() => {
-          boxesUtil.removeCable({ cableID: cable._id });
-          refresh((s) => s + 1);
-        }}
-        fill={"#ee0000"}
-        r={5}
-        cx={(x1 + x2) / 2}
-        cy={(y1 + y2) / 2}
-      ></circle>
+      {show.includes("cable") && (
+        <AutoFlipLine
+          distortion={0}
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          force={"v"}
+          animated={true}
+          reverse={false}
+        ></AutoFlipLine>
+      )}
+      {show.includes("close") && (
+        <g>
+          <circle
+            style={{ opacity: opacity - 0.05 }}
+            onMouseOver={() => {
+              setOpacity(1);
+            }}
+            onMouseLeave={() => {
+              setOpacity(0.15);
+            }}
+            onClick={() => {
+              boxesUtil.removeCable({ cableID: cable._id });
+              refresh((s) => s + 1);
+            }}
+            fill={"#ffffff"}
+            r={10}
+            cx={(x1 + x2) / 2}
+            cy={(y1 + y2) / 2}
+          ></circle>
+          <circle
+            style={{ opacity: opacity }}
+            onMouseOver={() => {
+              setOpacity(1);
+            }}
+            onMouseLeave={() => {
+              setOpacity(0.15);
+            }}
+            onClick={() => {
+              boxesUtil.removeCable({ cableID: cable._id });
+              refresh((s) => s + 1);
+            }}
+            fill={"#ee0000"}
+            r={5}
+            cx={(x1 + x2) / 2}
+            cy={(y1 + y2) / 2}
+          ></circle>
+        </g>
+      )}
     </g>
   );
 };
@@ -622,6 +589,7 @@ export function SVGEditor({ rect, state }) {
           cable={cable}
           index={index}
           refresh={refresh}
+          show={["cable"]}
         ></LogicCable>
       );
     });
@@ -630,14 +598,15 @@ export function SVGEditor({ rect, state }) {
   let CloseBtns = () => {
     return state.cables.map((cable, index) => {
       return (
-        <CloseBtn
+        <LogicCable
           key={cable._id + "_" + index}
           svg={svg.current}
           state={state}
           cable={cable}
           index={index}
           refresh={refresh}
-        ></CloseBtn>
+          show={["close"]}
+        ></LogicCable>
       );
     });
   };
@@ -688,6 +657,7 @@ export function SVGEditor({ rect, state }) {
         height={rect.height}
         fill="transparent"
       ></rect>
+
       <text
         x={10 + pan.x}
         y={10 + 17 + pan.y}
@@ -700,14 +670,27 @@ export function SVGEditor({ rect, state }) {
       </text>
 
       <text
-        x={"Edit Core Logic".length * 7 + 10 + pan.x}
+        x={"Edit Core File".length * 7 + 17 + pan.x}
         y={10 + 17 + pan.y}
         onClick={openCore}
         fontSize="17"
         fill="white"
         className="underline"
       >
-        Edit Core Logic
+        Edit Core File
+      </text>
+
+      <text
+        x={"Reset View".length * 7 + 150 + pan.x}
+        y={10 + 17 + pan.y}
+        onClick={() => {
+          setPan({ x: 0, y: 0 });
+        }}
+        fontSize="17"
+        fill="white"
+        className="underline"
+      >
+        Reset View
       </text>
 
       {svg.current && hand && (
