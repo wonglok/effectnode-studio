@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useDrag, useMove, useWheel } from "react-use-gesture";
+import { useDrag, useWheel } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project";
 import smalltalk from "smalltalk";
 
@@ -74,6 +74,27 @@ export function Box({
 
   let boxHeight = fontSize + paddingY;
   let boxWidth = perCharWidth * textLength + paddingX;
+
+  let InputBalls = () => {
+    let gap = 3;
+    return box.inputs.map((input, index) => {
+      return (
+        <circle
+          key={input._id + box._id}
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            onClickInput({ type: "input", box, slotID: input._id });
+          }}
+          id={`${BOX_SEPERATOR}${box.moduleName}${INPUT_SEPERATOR}${input._id}`}
+          r={CONNECTOR_RADIUS}
+          cx={CONNECTOR_RADIUS * 1.0 + (CONNECTOR_RADIUS + gap) * 2.0 * index}
+          cy={-CONNECTOR_RADIUS * 1.5 - 3}
+          fill={"#ddffdd"}
+          stroke={"#77ff77"}
+        ></circle>
+      );
+    });
+  };
   return (
     <g transform={`translate(${drag.x}, ${drag.y})`}>
       <rect
@@ -113,27 +134,12 @@ export function Box({
       )}
 
       {/* Input, Green */}
-      <circle
-        style={{ cursor: "pointer" }}
-        onClick={() =>
-          onClickInput({ type: "input", box, slotName: "SLOT_ADS123" })
-        }
-        id={`${BOX_SEPERATOR}${
-          box.moduleName
-        }${INPUT_SEPERATOR}${"SLOT_ADS123"}`}
-        r={CONNECTOR_RADIUS}
-        cx={CONNECTOR_RADIUS * 1.0}
-        cy={-CONNECTOR_RADIUS * 1.5}
-        fill={"#ddffdd"}
-        stroke={"#77ff77"}
-      ></circle>
+      {InputBalls()}
 
       {/* Output Blue */}
       <circle
         style={{ cursor: "pointer" }}
-        onClick={() =>
-          onClickOutput({ type: "output", box, slotName: "output" })
-        }
+        onClick={() => onClickOutput({ type: "output", box, slotID: "output" })}
         id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}${"output"}`}
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
@@ -242,11 +248,11 @@ function HandLine({ svg, hand }) {
 
       if (hand.type === "output") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}${hand.slotName}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}${hand.slotID}`
         );
       } else if (hand.type === "input") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${hand.box.moduleName}${INPUT_SEPERATOR}${hand.slotName}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${INPUT_SEPERATOR}${hand.slotID}`
         );
       }
 
@@ -269,7 +275,7 @@ function HandLine({ svg, hand }) {
     return () => {
       svg.removeEventListener("mousemove", onMM);
     };
-  }, [hand]);
+  }, [hand, svg]);
 
   useEffect(() => {
     let onMM = (ev) => {
@@ -329,40 +335,85 @@ export function SVGEditor({ rect, state }) {
     }
   });
 
+  let onTryConnect = ({ clickedBox, clickedType }) => {
+    if (hand.type === "output" && clickedType === "box") {
+      let outputBox = hand.box;
+      let inputBox = clickedBox;
+
+      let input = inputBox.inputs[0];
+      let inputSlotID = input._id;
+
+      let outputBoxID = outputBox._id;
+      let inputBoxID = inputBox._id;
+
+      boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+      setHandMode(false);
+    } else if (hand.type === "input" && clickedType === "box") {
+      let inputBox = hand.box;
+      let outputBox = clickedBox;
+
+      let input = inputBox.inputs[0];
+      let inputSlotID = input._id;
+
+      let outputBoxID = outputBox._id;
+      let inputBoxID = inputBox._id;
+
+      boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+    } else if (hand.type === "output" && clickedType === "input") {
+    } else if (hand.type === "input" && clickedType === "output") {
+    } else {
+      setHandMode(false);
+    }
+  };
+
   const boxes = state.boxes.map((e) => {
     return (
       <Box
         key={e._id}
         box={e}
         onClickBox={({ box }) => {
-          if (!hand.visible) {
+          if (!hand) {
             setHandMode((m) => ({
               type: "output",
-              slotName: "output",
-              box: box,
-              visible: true,
-            }));
-          }
-        }}
-        onClickInput={({ type, slotName, box }) => {
-          if (!hand.visible) {
-            setHandMode((m) => ({
-              type,
-              slotName,
-              box: box,
-              visible: true,
-            }));
-          }
-        }}
-        onClickOutput={({ type, slotName, box }) => {
-          if (!hand.visible) {
-            setHandMode((m) => ({
-              type,
-              slotName,
+              slotID: "output",
               box: box,
               visible: true,
             }));
           } else {
+            onTryConnect({
+              clickedBox: box,
+              clickedType: "box",
+            });
+          }
+        }}
+        onClickInput={({ type, slotID, box }) => {
+          if (!hand) {
+            setHandMode((m) => ({
+              type,
+              slotID,
+              box: box,
+              visible: true,
+            }));
+          } else {
+            onTryConnect({
+              clickedBox: box,
+              clickedType: "input",
+            });
+          }
+        }}
+        onClickOutput={({ type, slotID, box }) => {
+          if (!hand) {
+            setHandMode((m) => ({
+              type,
+              slotID,
+              box: box,
+              visible: true,
+            }));
+          } else {
+            onTryConnect({
+              clickedBox: box,
+              clickedType: "output",
+            });
           }
         }}
         graphRefresh={refresh}

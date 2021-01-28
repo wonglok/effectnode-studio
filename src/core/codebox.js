@@ -81,6 +81,20 @@ export const useBoxes = ({ db, root }) => {
         moduleName,
         fileName,
         slug,
+        inputs: [
+          {
+            _id: getID(),
+            name: "main",
+          },
+          {
+            _id: getID(),
+            name: "speed",
+          },
+          {
+            _id: getID(),
+            name: "color",
+          },
+        ],
       })
       .write();
 
