@@ -356,14 +356,18 @@ let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
       setPt2(onSVGCoord(svg, outputSlotDOM));
     }
 
-    window.addEventListener("dragged-box", ({ detail: { boxID } }) => {
+    let dragBox = ({ detail: { boxID } }) => {
       if (boxID === inputBox._id || boxID === outputBox._id) {
         if (outputSlotDOM && inputSlotDOM) {
           setPt1(onSVGCoord(svg, inputSlotDOM));
           setPt2(onSVGCoord(svg, outputSlotDOM));
         }
       }
-    });
+    };
+    window.addEventListener("dragged-box", dragBox);
+    return () => {
+      window.removeEventListener("dragged-box", dragBox);
+    };
   }, [cable, inputBox, outputBox]);
   return (
     <g>
