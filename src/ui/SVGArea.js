@@ -748,7 +748,7 @@ export function SVGEditor({ rect, state }) {
           }}
           fontSize="17"
           fill="white"
-          className="underline"
+          className="underline cursor-pointer"
         >
           Reset View
         </text>
@@ -759,7 +759,7 @@ export function SVGEditor({ rect, state }) {
           onClick={addModule}
           fontSize="17"
           fill="white"
-          className="underline"
+          className="underline cursor-pointer"
         >
           Add Module
         </text>
@@ -770,7 +770,7 @@ export function SVGEditor({ rect, state }) {
           onClick={openCore}
           fontSize="17"
           fill="white"
-          className="underline"
+          className="underline cursor-pointer"
         >
           Edit Core File
         </text>

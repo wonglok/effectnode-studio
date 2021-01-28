@@ -88,8 +88,6 @@ window.StreamInput = (val) => {
   window.dispatchEvent(
     new CustomEvent("refresh-state", { detail: db.getState() })
   );
-
-  // console.log(JSON.stringify(db.getState()));
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -106,6 +104,56 @@ const onReady = (cb) => {
     }
   });
 };
+
+let isFunction = function (obj) {
+  return typeof obj === "function" || false;
+};
+
+class EventEmitter {
+  // https://gist.github.com/datchley/37353d6a2cb629687eb9
+  constructor() {
+    this.listeners = new Map();
+  }
+
+  on(label, callback) {
+    this.listeners.has(label) || this.listeners.set(label, []);
+    this.listeners.get(label).push(callback);
+
+    return () => {
+      this.off(label, callback);
+    };
+  }
+
+  off(label, callback) {
+    let listeners = this.listeners.get(label),
+      index;
+
+    if (listeners && listeners.length) {
+      index = listeners.reduce((i, listener, index) => {
+        return isFunction(listener) && listener === callback ? (i = index) : i;
+      }, -1);
+
+      if (index > -1) {
+        listeners.splice(index, 1);
+        this.listeners.set(label, listeners);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  emit(label, ...args) {
+    let listeners = this.listeners.get(label);
+
+    if (listeners && listeners.length) {
+      listeners.forEach((listener) => {
+        listener(...args);
+      });
+      return true;
+    }
+    return false;
+  }
+}
 
 function MyCore({ mounter }) {
   let globalMap = new Map();
@@ -126,42 +174,45 @@ function MyCore({ mounter }) {
     },
   };
 
+  let onEachBox = ({ boxes, cables, eventBus }) => {
+    let streamFrom = (nameOrIDX, cb) => {
+      let inputs = box.inputs;
+
+      let input = inputs[nameOrIDX];
+
+      if (!input) {
+        input = inputs.find((e) => e.nameOrIDX === nameOrIDX);
+      }
+
+      if (input) {
+        eventBus.on(input._id, cb);
+      } else {
+        console.log(box.moduleName, "not found input of", nameOrIDX);
+      }
+    };
+
+    let send = (data) => {
+      let outCables = cables.filter((c) => c.outputBoxID === box._id);
+      outCables.forEach((cable) => {
+        eventBus.emit(cable.inputSlotID, data);
+      });
+    };
+
+    BoxScripts[box.moduleName].box({
+      context,
+      domElement: mounter,
+      send,
+      streamFrom,
+    });
+  };
+
   let runEachModule = () => {
     let boxes = db.getState().boxes;
+    let cables = db.getState().cables;
+    let eventBus = new EventEmitter();
 
     for (let box of boxes) {
-      let onChangeRootState = async (cb) => {
-        let lastClean = () => {};
-        window.addEventListener("refresh-state", async () => {
-          typeof lastClean === "function" && (await lastClean());
-          lastClean = await cb({ state: db.getState() });
-        });
-        lastClean = await cb({ state: db.getState() });
-      };
-
-      let onChangeBox = async (cb) => {
-        let lastClean = () => {};
-        window.addEventListener("refresh-state", async () => {
-          typeof lastClean === "function" && (await lastClean());
-          let state = db.getState();
-          let newBox = boxes.find((e) => e.moduleName === box.moduleName);
-          lastClean = await cb({ state, box: newBox });
-        });
-        let state = db.getState();
-        let newBox = boxes.find((e) => e.moduleName === box.moduleName);
-        lastClean = await cb({ state, box: newBox });
-      };
-
-      let args = {
-        log: (data) => {
-          console.log(JSON.stringify(data, null, "    "));
-        },
-        context,
-        onChangeBox,
-        onChangeRootState,
-        domElement: mounter,
-      };
-      BoxScripts[box.moduleName].box(args);
+      onEachBox({ box, boxes, cables, eventBus });
     }
   };
 
@@ -177,7 +228,6 @@ function main({ mounter }) {
 
 export default main;
 export { main };
-
 
 `;
 
