@@ -565,7 +565,7 @@ export function SVGEditor({ rect, state }) {
     <svg
       ref={svg}
       {...bind()}
-      style={{ backgroundColor: "#232323" }}
+      style={{ backgroundColor: "#444444" }}
       width={rect.width}
       height={rect.height}
       viewBox={`${pan.x} ${pan.y} ${rect.width} ${rect.height}`}
@@ -576,7 +576,7 @@ export function SVGEditor({ rect, state }) {
         y={pan.y}
         width={rect.width}
         height={rect.height}
-        fill="gray"
+        fill="transparent"
       ></rect>
       <text
         x={10 + pan.x}

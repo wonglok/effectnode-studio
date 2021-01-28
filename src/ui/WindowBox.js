@@ -298,6 +298,7 @@ export function TaskBarSet() {
 
   return (
     <div
+      style={{ zIndex: 999999 }}
       className={
         "absolute bottom-0 left-0 w-full bg-opacity-25 bg-black h-12 p-2"
       }
