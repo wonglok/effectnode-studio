@@ -134,7 +134,6 @@ export function Box({
       ></rect>
 
       <text
-        onClick={onClickLabel}
         className="select-none"
         fill={"#ececec"}
         {...bind()}
@@ -157,6 +156,18 @@ export function Box({
         Edit Code
       </text>
 
+      <text
+        onClick={onClickLabel}
+        className="select-none underline cursor-pointer"
+        fill={"#ececec"}
+        {...bind()}
+        x={perCharWidth * textLength + paddingX + paddingX}
+        y={fontSize + 1 + fontSize + 1 + 10}
+        fontSize={fontSize + "px"}
+      >
+        Edit I/O
+      </text>
+
       {!box.isProtected && (
         <text
           onClick={onClickRemoveLabel}
@@ -164,10 +175,10 @@ export function Box({
           fill={"#ffecec"}
           {...bind()}
           x={perCharWidth * textLength + paddingX + paddingX}
-          y={fontSize + 1 + fontSize + 1 + 10}
+          y={fontSize + 1 + fontSize + 1 + 35}
           fontSize={fontSize + "px"}
         >
-          Remove Module
+          Remove
         </text>
       )}
 
@@ -184,8 +195,8 @@ export function Box({
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
         cy={CONNECTOR_RADIUS * 1.5 + boxHeight}
-        fill={isOutputConnected ? "#ff7777" : "#ffdddd"}
-        stroke={isOutputConnected ? "#ff7777" : "#ffdddd"}
+        fill={isOutputConnected ? "#7777ff" : "#ddddff"}
+        stroke={isOutputConnected ? "#7777ff" : "#ddddff"}
       ></circle>
 
       {/* <text y={-20} fontSize={'12px'}>{JSON.stringify(box)}</text> */}
@@ -479,10 +490,28 @@ let LogicCable = ({
 
 export function SVGEditor({ rect, state }) {
   const svg = useRef();
+  const [zoom, setZoom] = useState(1);
   const [rID, refresh] = useState(0);
   const [hand, setHandMode] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const { boxesUtil, root, lowdb } = useContext(ProjectContext);
+
+  useEffect(() => {
+    function zoom(e) {
+      e.preventDefault();
+      if (e.ctrlKey) {
+        var scaler = Math.exp(e.deltaY / 100);
+        setZoom((z) => {
+          return z * scaler;
+        });
+      }
+    }
+
+    svg.current.addEventListener("wheel", zoom, { passive: false });
+    return () => {
+      svg.current.removeEventListener("wheel", zoom, { passive: false });
+    };
+  });
 
   // const { addBox } = useWorkbench({ projectRoot: url });
 
@@ -689,7 +718,7 @@ export function SVGEditor({ rect, state }) {
       style={{ backgroundColor: "#444444" }}
       width={rect.width}
       height={rect.height}
-      viewBox={`${pan.x} ${pan.y} ${rect.width} ${rect.height}`}
+      viewBox={`${pan.x} ${pan.y} ${rect.width * zoom} ${rect.height * zoom}`}
     >
       <rect
         onClick={() => setHandMode(false)}
@@ -715,6 +744,7 @@ export function SVGEditor({ rect, state }) {
           y={10 + 17 + pan.y}
           onClick={() => {
             setPan({ x: 0, y: 0 });
+            setZoom(1);
           }}
           fontSize="17"
           fill="white"
