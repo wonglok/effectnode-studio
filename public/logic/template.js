@@ -174,7 +174,7 @@ function MyCore({ mounter }) {
     },
   };
 
-  let onEachBox = ({ boxes, cables, eventBus }) => {
+  let onEachBox = ({ box, boxes, cables, eventBus }) => {
     let streamFrom = (nameOrIDX, cb) => {
       let inputs = box.inputs;
 
@@ -228,6 +228,7 @@ function main({ mounter }) {
 
 export default main;
 export { main };
+
 
 `;
 
