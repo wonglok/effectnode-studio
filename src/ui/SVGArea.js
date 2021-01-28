@@ -317,6 +317,51 @@ function HandLine({ svg, hand }) {
     </g>
   );
 }
+let LogicCable = ({ svg, state, cable, index }) => {
+  let [[x1, y1], setPt1] = useState([0, 0]);
+  let [[x2, y2], setPt2] = useState([0, 0]);
+
+  let onSVGCoord = (svg, dotEl) => {
+    const pt = svg.createSVGPoint();
+    let rPt = dotEl.getBoundingClientRect();
+
+    pt.y = rPt.top;
+    pt.x = rPt.left;
+
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return [svgP.x + CONNECTOR_RADIUS, svgP.y + CONNECTOR_RADIUS];
+  };
+
+  useEffect(() => {
+    let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
+    let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
+    let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
+
+    let outputSlotDOM = document.querySelector(
+      `#${BOX_SEPERATOR}${outputBox.moduleName}${OUTPUT_SEPERATOR}${"output"}`
+    );
+    let inputSlotDOM = document.querySelector(
+      `#${BOX_SEPERATOR}${inputBox.moduleName}${INPUT_SEPERATOR}${inputSlot._id}`
+    );
+
+    if (outputSlotDOM && inputSlotDOM) {
+      setPt1(onSVGCoord(svg, inputSlotDOM));
+      setPt2(onSVGCoord(svg, outputSlotDOM));
+    }
+  }, [cable, cable.length]);
+
+  return (
+    <AutoFlipLine
+      distortion={0}
+      x1={x1}
+      y1={y1}
+      x2={x2}
+      y2={y2}
+      animated={true}
+      reverse={false}
+    ></AutoFlipLine>
+  );
+};
 
 export function SVGEditor({ rect, state }) {
   const svg = useRef();
@@ -421,6 +466,20 @@ export function SVGEditor({ rect, state }) {
     );
   });
 
+  let Cables = () => {
+    return state.cables.map((cable, index) => {
+      return (
+        <LogicCable
+          key={cable._id + "_" + index}
+          svg={svg.current}
+          state={state}
+          cable={cable}
+          index={index}
+        ></LogicCable>
+      );
+    });
+  };
+
   const addModule = async () => {
     await boxesUtil.addBox();
     refresh((s) => s + rID + 1);
@@ -494,6 +553,8 @@ export function SVGEditor({ rect, state }) {
       )}
 
       {boxes}
+
+      {svg.current && Cables()}
 
       {/* <SlotLine></SlotLine> */}
 
