@@ -38,6 +38,9 @@ export function Box({
       setDrag((s) => {
         return { ...s, x: s.x + dx, y: s.y + dy };
       });
+      window.dispatchEvent(
+        new CustomEvent("dragged-box", { detail: { boxID: box._id } })
+      );
     } else if (!down) {
       updateBox({ box: { ...box, ...drag } });
     }
@@ -332,9 +335,9 @@ let LogicCable = ({ svg, state, cable, index }) => {
     return [svgP.x + CONNECTOR_RADIUS, svgP.y + CONNECTOR_RADIUS];
   };
 
+  let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
+  let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
   useEffect(() => {
-    let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
-    let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
     let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
 
     let outputSlotDOM = document.querySelector(
@@ -348,7 +351,16 @@ let LogicCable = ({ svg, state, cable, index }) => {
       setPt1(onSVGCoord(svg, inputSlotDOM));
       setPt2(onSVGCoord(svg, outputSlotDOM));
     }
-  }, [cable, cable.length]);
+
+    window.addEventListener("dragged-box", ({ detail: { boxID } }) => {
+      if (boxID === inputBox._id || boxID === outputBox._id) {
+        if (outputSlotDOM && inputSlotDOM) {
+          setPt1(onSVGCoord(svg, inputSlotDOM));
+          setPt2(onSVGCoord(svg, outputSlotDOM));
+        }
+      }
+    });
+  }, [cable, cable.length, inputBox, outputBox]);
 
   return (
     <AutoFlipLine
@@ -418,12 +430,12 @@ export function SVGEditor({ rect, state }) {
         box={e}
         onClickBox={({ box }) => {
           if (!hand) {
-            setHandMode((m) => ({
-              type: "output",
-              slotID: "output",
-              box: box,
-              visible: true,
-            }));
+            // setHandMode((m) => ({
+            //   type: "output",
+            //   slotID: "output",
+            //   box: box,
+            //   visible: true,
+            // }));
           } else {
             onTryConnect({
               clickedBox: box,
