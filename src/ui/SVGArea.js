@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {
   useContext,
   useEffect,
@@ -86,7 +87,7 @@ export function Box({
           key={input._id + box._id}
           style={{ cursor: "pointer" }}
           onClick={() => {
-            onClickInput({ type: "input", box, slotID: input._id });
+            onClickInput({ type: "input", box, input, handSlotID: input._id });
           }}
           id={`${BOX_SEPERATOR}${box.moduleName}${INPUT_SEPERATOR}${input._id}`}
           r={CONNECTOR_RADIUS}
@@ -142,7 +143,9 @@ export function Box({
       {/* Output Blue */}
       <circle
         style={{ cursor: "pointer" }}
-        onClick={() => onClickOutput({ type: "output", box, slotID: "output" })}
+        onClick={() =>
+          onClickOutput({ type: "output", box, handSlotID: "output" })
+        }
         id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}${"output"}`}
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
@@ -251,11 +254,11 @@ function HandLine({ svg, hand }) {
 
       if (hand.type === "output") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}${hand.slotID}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${OUTPUT_SEPERATOR}${hand.handSlotID}`
         );
       } else if (hand.type === "input") {
         element = svg.querySelector(
-          `#${BOX_SEPERATOR}${hand.box.moduleName}${INPUT_SEPERATOR}${hand.slotID}`
+          `#${BOX_SEPERATOR}${hand.box.moduleName}${INPUT_SEPERATOR}${hand.handSlotID}`
         );
       }
 
@@ -278,7 +281,7 @@ function HandLine({ svg, hand }) {
     return () => {
       svg.removeEventListener("mousemove", onMM);
     };
-  }, [hand, svg]);
+  }, [svg, hand]);
 
   useEffect(() => {
     let onMM = (ev) => {
@@ -337,6 +340,7 @@ let LogicCable = ({ svg, state, cable, index }) => {
 
   let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
   let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
+
   useEffect(() => {
     let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
 
@@ -379,9 +383,9 @@ export function SVGEditor({ rect, state }) {
   const svg = useRef();
   const [rID, refresh] = useState(0);
   const [hand, setHandMode] = useState(false);
-
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const { boxesUtil, root } = useContext(ProjectContext);
+  const { boxesUtil, root, lowdb } = useContext(ProjectContext);
+
   // const { addBox } = useWorkbench({ projectRoot: url });
 
   const bind = useWheel(({ wheeling, delta: [dx, dy] }) => {
@@ -392,10 +396,26 @@ export function SVGEditor({ rect, state }) {
     }
   });
 
-  let onTryConnect = ({ clickedBox, clickedType }) => {
+  let checkAddCable = ({ outputBoxID, inputBoxID, inputSlotID }) => {
+    let cables = lowdb.getState().cables;
+    let res = cables.find((e) => {
+      return (
+        e.outputBoxID === outputBoxID &&
+        e.inputBoxID === inputBoxID &&
+        e.inputSlotID === inputSlotID
+      );
+    });
+
+    if (!res) {
+      boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+    }
+    // console.log({ outputBoxID, inputBoxID, inputSlotID });
+  };
+
+  let onTryConnect = ({ nowClickedBox, clickedType, clickedInput }) => {
     if (hand.type === "output" && clickedType === "box") {
       let outputBox = hand.box;
-      let inputBox = clickedBox;
+      let inputBox = nowClickedBox;
 
       let input = inputBox.inputs[0];
       let inputSlotID = input._id;
@@ -403,11 +423,11 @@ export function SVGEditor({ rect, state }) {
       let outputBoxID = outputBox._id;
       let inputBoxID = inputBox._id;
 
-      boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+      checkAddCable({ outputBoxID, inputBoxID, inputSlotID });
       setHandMode(false);
     } else if (hand.type === "input" && clickedType === "box") {
       let inputBox = hand.box;
-      let outputBox = clickedBox;
+      let outputBox = nowClickedBox;
 
       let input = inputBox.inputs[0];
       let inputSlotID = input._id;
@@ -415,9 +435,32 @@ export function SVGEditor({ rect, state }) {
       let outputBoxID = outputBox._id;
       let inputBoxID = inputBox._id;
 
-      boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+      checkAddCable({ outputBoxID, inputBoxID, inputSlotID });
+      setHandMode(false);
     } else if (hand.type === "output" && clickedType === "input") {
+      let input = clickedInput;
+      let inputSlotID = input._id;
+
+      let outputBox = hand.box;
+      let inputBox = nowClickedBox;
+
+      let outputBoxID = outputBox._id;
+      let inputBoxID = inputBox._id;
+
+      checkAddCable({ outputBoxID, inputBoxID, inputSlotID });
+      setHandMode(false);
     } else if (hand.type === "input" && clickedType === "output") {
+      let inputBox = hand.box;
+      let outputBox = nowClickedBox;
+
+      let input = hand.input;
+      let inputSlotID = input._id;
+
+      let outputBoxID = outputBox._id;
+      let inputBoxID = inputBox._id;
+
+      checkAddCable({ outputBoxID, inputBoxID, inputSlotID });
+      setHandMode(false);
     } else {
       setHandMode(false);
     }
@@ -430,45 +473,41 @@ export function SVGEditor({ rect, state }) {
         box={e}
         onClickBox={({ box }) => {
           if (!hand) {
-            // setHandMode((m) => ({
-            //   type: "output",
-            //   slotID: "output",
-            //   box: box,
-            //   visible: true,
-            // }));
           } else {
             onTryConnect({
-              clickedBox: box,
+              nowClickedBox: box,
               clickedType: "box",
             });
           }
         }}
-        onClickInput={({ type, slotID, box }) => {
+        onClickInput={({ type, input, box, handSlotID }) => {
           if (!hand) {
-            setHandMode((m) => ({
+            setHandMode(() => ({
+              handSlotID,
               type,
-              slotID,
+              input,
               box: box,
               visible: true,
             }));
           } else {
             onTryConnect({
-              clickedBox: box,
+              clickedInput: input,
+              nowClickedBox: box,
               clickedType: "input",
             });
           }
         }}
-        onClickOutput={({ type, slotID, box }) => {
+        onClickOutput={({ type, box, handSlotID }) => {
           if (!hand) {
             setHandMode((m) => ({
+              handSlotID,
               type,
-              slotID,
               box: box,
               visible: true,
             }));
           } else {
             onTryConnect({
-              clickedBox: box,
+              nowClickedBox: box,
               clickedType: "output",
             });
           }
@@ -564,9 +603,9 @@ export function SVGEditor({ rect, state }) {
         <HandLine xy2={[200, 200]} svg={svg.current} hand={hand}></HandLine>
       )}
 
-      {boxes}
-
       {svg.current && Cables()}
+
+      {boxes}
 
       {/* <SlotLine></SlotLine> */}
 

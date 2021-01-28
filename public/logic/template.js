@@ -215,23 +215,96 @@ export { main };
 function makeMeta({ folder }) {
   let metaJSON = JSON.stringify(
     {
-      // JS_FOLDER: "./src/js/",
-      // BOXES_FOLDER: "./src/js/boxes",
       boxes: [
         {
           isFirstUserBox: true,
           isProtected: true,
           isUserBoxes: true,
           _id: "AAA",
-          x: 19.741943359375,
-          y: 60,
+          x: 66.10203552246094,
+          y: 96.10215759277344,
           displayName: "app",
           moduleName: "AAA__ID__app",
           fileName: "AAA__ID__app.js",
           slug: "app",
+          inputs: [
+            {
+              _id: "main_rID_123",
+              name: "main",
+            },
+            {
+              _id: "mode_rID_456",
+              name: "mode",
+            },
+          ],
+        },
+        {
+          isFirstUserBox: false,
+          isProtected: false,
+          isUserBoxes: true,
+          _id: "_47033524",
+          x: 186.66073608398438,
+          y: 279.20904541015625,
+          displayName: "funfun",
+          moduleName: "_47033524__ID__funfun",
+          fileName: "_47033524__ID__funfun.js",
+          slug: "funfun",
+          inputs: [
+            {
+              _id: "_10240359",
+              name: "main",
+            },
+            {
+              _id: "_71389125",
+              name: "speed",
+            },
+            {
+              _id: "_424298",
+              name: "color",
+            },
+          ],
+        },
+        {
+          isFirstUserBox: false,
+          isProtected: false,
+          isUserBoxes: true,
+          _id: "_5987859",
+          x: 285.09521484375,
+          y: 453.8958740234375,
+          displayName: "bb",
+          moduleName: "_5987859__ID__bb",
+          fileName: "_5987859__ID__bb.js",
+          slug: "bb",
+          inputs: [
+            {
+              _id: "_87739092",
+              name: "main",
+            },
+            {
+              _id: "_97050811",
+              name: "speed",
+            },
+            {
+              _id: "_3577102",
+              name: "color",
+            },
+          ],
         },
       ],
-      cables: [],
+      cables: [
+        {
+          _id: "_5304519",
+          outputBoxID: "AAA",
+          inputBoxID: "_47033524",
+          inputSlotID: "_10240359",
+        },
+        {
+          _id: "_92190910",
+          outputBoxID: "_47033524",
+          inputBoxID: "_5987859",
+          inputSlotID: "_87739092",
+        },
+      ],
       slots: [],
     },
     null,
