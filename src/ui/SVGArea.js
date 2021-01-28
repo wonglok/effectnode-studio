@@ -373,6 +373,7 @@ let LogicCable = ({ svg, state, cable, index }) => {
       y1={y1}
       x2={x2}
       y2={y2}
+      force={"v"}
       animated={true}
       reverse={false}
     ></AutoFlipLine>
