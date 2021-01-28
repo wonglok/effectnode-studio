@@ -144,6 +144,16 @@ module.exports.box = () => {
     window.dispatchEvent(new Event("reoad-page"));
   };
 
+  let removeCable = ({ cableID }) => {
+    let _id = cableID;
+
+    db.get("cables").remove({ _id }).write();
+
+    saveInstant(db.getState());
+    // window.dispatchEvent(new Event("stream-state-to-webview"));
+    window.dispatchEvent(new Event("reoad-page"));
+  };
+
   const resolvePath = ({ box }) => {
     // fileName
     let path = window.require("path");
@@ -161,6 +171,7 @@ module.exports.box = () => {
   };
 
   return {
+    removeCable,
     addCable,
 
     resolvePath,

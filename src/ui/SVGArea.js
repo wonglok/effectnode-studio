@@ -323,10 +323,10 @@ function HandLine({ svg, hand }) {
     </g>
   );
 }
-let LogicCable = ({ svg, state, cable, index }) => {
+
+let LogicCable = ({ svg, state, cable, refresh = () => {} }) => {
   let [[x1, y1], setPt1] = useState([0, 0]);
   let [[x2, y2], setPt2] = useState([0, 0]);
-
   let onSVGCoord = (svg, dotEl) => {
     const pt = svg.createSVGPoint();
     let rPt = dotEl.getBoundingClientRect();
@@ -364,19 +364,104 @@ let LogicCable = ({ svg, state, cable, index }) => {
         }
       }
     });
-  }, [cable, cable.length, inputBox, outputBox]);
-
+  }, [cable, inputBox, outputBox]);
   return (
-    <AutoFlipLine
-      distortion={0}
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      force={"v"}
-      animated={true}
-      reverse={false}
-    ></AutoFlipLine>
+    <g>
+      <AutoFlipLine
+        distortion={0}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        force={"v"}
+        animated={true}
+        reverse={false}
+      ></AutoFlipLine>
+    </g>
+  );
+};
+
+let CloseBtn = ({ svg, state, cable, refresh = () => {} }) => {
+  let [[x1, y1], setPt1] = useState([0, 0]);
+  let [[x2, y2], setPt2] = useState([0, 0]);
+  let onSVGCoord = (svg, dotEl) => {
+    const pt = svg.createSVGPoint();
+    let rPt = dotEl.getBoundingClientRect();
+
+    pt.y = rPt.top;
+    pt.x = rPt.left;
+
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return [svgP.x + CONNECTOR_RADIUS, svgP.y + CONNECTOR_RADIUS];
+  };
+
+  let inputBox = state.boxes.find((b) => b._id === cable.inputBoxID);
+  let outputBox = state.boxes.find((b) => b._id === cable.outputBoxID);
+
+  useEffect(() => {
+    let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
+
+    let outputSlotDOM = document.querySelector(
+      `#${BOX_SEPERATOR}${outputBox.moduleName}${OUTPUT_SEPERATOR}${"output"}`
+    );
+    let inputSlotDOM = document.querySelector(
+      `#${BOX_SEPERATOR}${inputBox.moduleName}${INPUT_SEPERATOR}${inputSlot._id}`
+    );
+
+    if (outputSlotDOM && inputSlotDOM) {
+      setPt1(onSVGCoord(svg, inputSlotDOM));
+      setPt2(onSVGCoord(svg, outputSlotDOM));
+    }
+
+    window.addEventListener("dragged-box", ({ detail: { boxID } }) => {
+      if (boxID === inputBox._id || boxID === outputBox._id) {
+        if (outputSlotDOM && inputSlotDOM) {
+          setPt1(onSVGCoord(svg, inputSlotDOM));
+          setPt2(onSVGCoord(svg, outputSlotDOM));
+        }
+      }
+    });
+  }, [cable, inputBox, outputBox]);
+
+  let [opacity, setOpacity] = useState(0.15);
+  let { boxesUtil } = useContext(ProjectContext);
+  return (
+    <g>
+      <circle
+        style={{ opacity: opacity }}
+        onMouseOver={() => {
+          setOpacity(1);
+        }}
+        onMouseLeave={() => {
+          setOpacity(0.15);
+        }}
+        onClick={() => {
+          boxesUtil.removeCable({ cableID: cable._id });
+          refresh((s) => s + 1);
+        }}
+        fill={"#ffffff"}
+        r={10}
+        cx={(x1 + x2) / 2}
+        cy={(y1 + y2) / 2}
+      ></circle>
+      <circle
+        style={{ opacity: opacity }}
+        onMouseOver={() => {
+          setOpacity(1);
+        }}
+        onMouseLeave={() => {
+          setOpacity(0.15);
+        }}
+        onClick={() => {
+          boxesUtil.removeCable({ cableID: cable._id });
+          refresh((s) => s + 1);
+        }}
+        fill={"#ee0000"}
+        r={5}
+        cx={(x1 + x2) / 2}
+        cy={(y1 + y2) / 2}
+      ></circle>
+    </g>
   );
 };
 
@@ -399,7 +484,8 @@ export function SVGEditor({ rect, state }) {
 
   let checkAddCable = ({ outputBoxID, inputBoxID, inputSlotID }) => {
     let cables = lowdb.getState().cables;
-    let res = cables.find((e) => {
+
+    let found = cables.find((e) => {
       return (
         e.outputBoxID === outputBoxID &&
         e.inputBoxID === inputBoxID &&
@@ -407,7 +493,9 @@ export function SVGEditor({ rect, state }) {
       );
     });
 
-    if (!res) {
+    let sameSourceTarget = outputBoxID === inputBoxID;
+
+    if (!found && !sameSourceTarget) {
       boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
     }
     // console.log({ outputBoxID, inputBoxID, inputSlotID });
@@ -483,6 +571,8 @@ export function SVGEditor({ rect, state }) {
         }}
         onClickInput={({ type, input, box, handSlotID }) => {
           if (!hand) {
+            // console.log(input);
+
             setHandMode(() => ({
               handSlotID,
               type,
@@ -527,7 +617,23 @@ export function SVGEditor({ rect, state }) {
           state={state}
           cable={cable}
           index={index}
+          refresh={refresh}
         ></LogicCable>
+      );
+    });
+  };
+
+  let CloseBtns = () => {
+    return state.cables.map((cable, index) => {
+      return (
+        <CloseBtn
+          key={cable._id + "_" + index}
+          svg={svg.current}
+          state={state}
+          cable={cable}
+          index={index}
+          refresh={refresh}
+        ></CloseBtn>
       );
     });
   };
@@ -590,23 +696,25 @@ export function SVGEditor({ rect, state }) {
       </text>
 
       <text
-        x={"Edit Entry File".length * 7 + 10 + pan.x}
+        x={"Edit Core Logic".length * 7 + 10 + pan.x}
         y={10 + 17 + pan.y}
         onClick={openCore}
         fontSize="17"
         fill="white"
         className="underline"
       >
-        Edit Entry File
+        Edit Core Logic
       </text>
 
       {svg.current && hand && (
-        <HandLine xy2={[200, 200]} svg={svg.current} hand={hand}></HandLine>
+        <HandLine svg={svg.current} hand={hand}></HandLine>
       )}
 
       {svg.current && Cables()}
 
       {boxes}
+
+      {svg.current && CloseBtns()}
 
       {/* <SlotLine></SlotLine> */}
 
