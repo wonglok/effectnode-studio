@@ -135,6 +135,18 @@ export function Box({
 
       <text
         onClick={onClickLabel}
+        className="select-none"
+        fill={"#ececec"}
+        {...bind()}
+        x={perCharWidth * textLength + paddingX + paddingX}
+        y={-fontSize * 0.5}
+        fontSize={fontSize + "px"}
+      >
+        * {displayName} *
+      </text>
+
+      <text
+        onClick={onClickLabel}
         className="select-none underline cursor-pointer"
         fill={"#ececec"}
         {...bind()}
@@ -142,7 +154,7 @@ export function Box({
         y={fontSize + 1 + 3}
         fontSize={fontSize + "px"}
       >
-        {displayName}
+        Edit Code
       </text>
 
       {!box.isProtected && (
