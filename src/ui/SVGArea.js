@@ -17,6 +17,7 @@ const CONNECTOR_RADIUS = 6.5;
 
 export function Box({
   box,
+  state,
   graphRefresh = () => {},
   onClickOutput = () => {},
   onClickBox = () => {},
@@ -79,22 +80,43 @@ export function Box({
   let boxHeight = fontSize + paddingY;
   let boxWidth = perCharWidth * textLength + paddingX;
 
+  let hasOutputCable = () => {
+    let cables = state.cables;
+    if (!cables) {
+      return false;
+    }
+    return cables.some((e) => e.outputBoxID === box._id);
+  };
+  let isOutputConnected = hasOutputCable();
+
   let InputBalls = () => {
     let gap = 3;
     return box.inputs.map((input, index) => {
+      let hasCable = () => {
+        let cables = state.cables;
+        return cables.some((e) => e.inputSlotID === input._id);
+      };
+      let isConnected = hasCable();
       return (
         <circle
           key={input._id + box._id}
-          style={{ cursor: "pointer" }}
+          style={{ cursor: isConnected ? "auto" : "pointer" }}
           onClick={() => {
-            onClickInput({ type: "input", box, input, handSlotID: input._id });
+            if (!isConnected) {
+              onClickInput({
+                type: "input",
+                box,
+                input,
+                handSlotID: input._id,
+              });
+            }
           }}
           id={`${BOX_SEPERATOR}${box.moduleName}${INPUT_SEPERATOR}${input._id}`}
           r={CONNECTOR_RADIUS}
           cx={CONNECTOR_RADIUS * 1.0 + (CONNECTOR_RADIUS + gap) * 2.0 * index}
           cy={-CONNECTOR_RADIUS * 1.5 - 3}
-          fill={"#ddffdd"}
-          stroke={"#77ff77"}
+          fill={isConnected ? "#77ff77" : "#ddffdd"}
+          stroke={isConnected ? "#77ff77" : "#ddffdd"}
         ></circle>
       );
     });
@@ -133,7 +155,7 @@ export function Box({
           y={fontSize + 1 + fontSize + 1 + 10}
           fontSize={fontSize + "px"}
         >
-          Remove
+          Remove Module
         </text>
       )}
 
@@ -150,8 +172,8 @@ export function Box({
         r={CONNECTOR_RADIUS}
         cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
         cy={CONNECTOR_RADIUS * 1.5 + boxHeight}
-        fill={"#ffdddd"}
-        stroke={"#ff7777"}
+        fill={isOutputConnected ? "#ff7777" : "#ffdddd"}
+        stroke={isOutputConnected ? "#ff7777" : "#ffdddd"}
       ></circle>
 
       {/* <text y={-20} fontSize={'12px'}>{JSON.stringify(box)}</text> */}
@@ -182,22 +204,6 @@ function AutoFlipLine({
   distortion = 0,
   force = false,
 }) {
-  let [offsetAnim, setOffset] = useState(0);
-  useEffect(() => {
-    let tt = setInterval(() => {
-      let factor = 1;
-      if (reverse) {
-        factor = -1;
-      }
-      if (animated) {
-        setOffset((s) => s + factor * 2.5);
-      }
-    }, 16.7);
-    return () => {
-      clearInterval(tt);
-    };
-  });
-
   let dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) * 0.5;
   dist += dist * distortion;
 
@@ -205,14 +211,36 @@ function AutoFlipLine({
   let factorX = x1 < x2 ? 1 : -1;
   let whichLine = Math.abs(y2 - y1) >= Math.abs(x2 - x1);
 
+  let refA = useRef();
+  let refB = useRef();
   if (force === "v") {
     whichLine = true;
   }
   if (force === "h") {
     whichLine = false;
   }
+  let ref = whichLine ? refA : refB;
+
+  useEffect(() => {
+    let acc = 0;
+    let tt = setInterval(() => {
+      let factor = 1;
+      if (reverse) {
+        factor = -1;
+      }
+      if (animated && ref.current) {
+        acc = acc + factor * 2.5;
+        ref.current.setAttribute("stroke-dashoffset", acc);
+      }
+    }, 16.7);
+    return () => {
+      clearInterval(tt);
+    };
+  });
+
   return whichLine ? (
     <path
+      ref={refA}
       className={"pointer-events-none"}
       d={`
 M${x1}, ${y1}
@@ -221,13 +249,14 @@ C${x1},${y1 + dist * factorY} ${x2},${y2 + dist * -factorY}
 
 ${x2},${y2}`}
       fill="none"
-      stroke="#bababa"
+      stroke="#babaff"
       strokeDasharray="24"
-      strokeWidth="1.5px"
-      strokeDashoffset={offsetAnim}
+      strokeWidth="2px"
+      // strokeDashoffset={offsetAnim}
     />
   ) : (
     <path
+      ref={refB}
       className={"pointer-events-none"}
       d={`
 M${x1}, ${y1}
@@ -236,10 +265,10 @@ C${x1 + dist * factorX},${y1} ${x2 + dist * -factorX},${y2}
 
 ${x2},${y2}`}
       fill="none"
-      stroke="#bababa"
-      strokeWidth="1.5px"
+      stroke="#babaff"
+      strokeWidth="2px"
       strokeDasharray="24"
-      strokeDashoffset={offsetAnim}
+      // strokeDashoffset={offsetAnim}
     />
   );
 }
@@ -531,6 +560,7 @@ export function SVGEditor({ rect, state }) {
       <Box
         key={e._id}
         box={e}
+        state={state}
         onClickBox={({ box }) => {
           if (!hand) {
           } else {
@@ -658,50 +688,51 @@ export function SVGEditor({ rect, state }) {
         fill="transparent"
       ></rect>
 
-      <text
-        x={10 + pan.x}
-        y={10 + 17 + pan.y}
-        onClick={addModule}
-        fontSize="17"
-        fill="white"
-        className="underline"
-      >
-        Add Module
-      </text>
-
-      <text
-        x={"Edit Core File".length * 7 + 17 + pan.x}
-        y={10 + 17 + pan.y}
-        onClick={openCore}
-        fontSize="17"
-        fill="white"
-        className="underline"
-      >
-        Edit Core File
-      </text>
-
-      <text
-        x={"Reset View".length * 7 + 150 + pan.x}
-        y={10 + 17 + pan.y}
-        onClick={() => {
-          setPan({ x: 0, y: 0 });
-        }}
-        fontSize="17"
-        fill="white"
-        className="underline"
-      >
-        Reset View
-      </text>
-
       {svg.current && hand && (
         <HandLine svg={svg.current} hand={hand}></HandLine>
       )}
 
       {svg.current && Cables()}
-
       {boxes}
-
       {svg.current && CloseBtns()}
+
+      {/* GUI */}
+      <g>
+        <text
+          x={10 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={() => {
+            setPan({ x: 0, y: 0 });
+          }}
+          fontSize="17"
+          fill="white"
+          className="underline"
+        >
+          Reset View
+        </text>
+
+        <text
+          x={"Edit Core File".length * 7 + 5 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={addModule}
+          fontSize="17"
+          fill="white"
+          className="underline"
+        >
+          Add Module
+        </text>
+
+        <text
+          x={"Reset View".length * 7 + 150 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={openCore}
+          fontSize="17"
+          fill="white"
+          className="underline"
+        >
+          Edit Core File
+        </text>
+      </g>
 
       {/* <SlotLine></SlotLine> */}
 
