@@ -312,7 +312,7 @@ function AutoFlipLine({
     return () => {
       clearInterval(tt);
     };
-  });
+  }, [x1, x2, y1, y2]);
 
   return whichLine ? (
     <path
@@ -807,7 +807,7 @@ export function SVGEditor({ rect, state }) {
         </text>
 
         <text
-          x={"Edit Core File".length * 7 + 5 + pan.x}
+          x={"Reset View".length * 7 + 30 + pan.x}
           y={10 + 17 + pan.y}
           onClick={addModule}
           fontSize="17"

@@ -4,6 +4,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useDrag, useMove } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
+import { IOEdit } from "./IOEdit.js";
 import { PreviewBox } from "./PreviewBox.js";
 import { SVGArea } from "./SVGArea.js";
 
@@ -95,6 +96,7 @@ export function WindowTemplate({
 
   const hide = () => {
     onChange({ ...rect, hidden: true });
+    window.dispatchEvent(new CustomEvent("reload-all-module-winbox"));
   };
 
   const close = () => {
@@ -115,20 +117,20 @@ export function WindowTemplate({
       onClick={onZIndex}
       onMouseDown={onZIndex}
       className={
-        " border absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg"
+        " absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg shadow-xl"
       }
       style={{
         zIndex: 10 + (rect.zIndex || 0),
         width: `${rect.w}px`,
         height: `${rect.h}px`,
-        borderColor: "#003E42",
+        // borderColor: "#003E42",
         transform: `translate3d(${rect.x}px, ${rect.y}px, 0px)`,
       }}
     >
       <div
         style={{ height: 25 + "px" }}
         className={
-          "w-full px-1 text-sm flex justify-between items-center " +
+          "w-full px-1 text-sm flex justify-between items-center cursor-move " +
           toolBarClassName
         }
         {...toolbar()}
@@ -245,7 +247,7 @@ export function ModueWindow({ children, win }) {
 
     // setDoc(rect);
     // window.dispatchEvent(
-    //   new CustomEvent("module-winbox-reload", { detail: {} })
+    //   new CustomEvent("reload-all-module-winbox", { detail: {} })
     // );
   };
 
@@ -254,14 +256,15 @@ export function ModueWindow({ children, win }) {
   //     let doc = await getDoc({ _id: winID });
   //     setDoc({ ...doc });
   //   };
-  //   window.addEventListener("module-winbox-reload", layout);
+  //   window.addEventListener("reload-all-module-winbox", layout);
   //   return () => {
-  //     window.removeEventListener("module-winbox-reload", layout);
+  //     window.removeEventListener("reload-all-module-winbox", layout);
   //   };
   // }, [winID]);
 
   return (
-    win && (
+    win &&
+    !win.hidden && (
       <WindowTemplate
         initVal={win}
         toolBarClassName={"bg-green-400"}
@@ -286,25 +289,28 @@ function ModulesSet() {
         if (doc) {
           console.log(doc);
           // setDoc(doc);
-          doc.zIndex = getZMax({ wins: modWindows });
+          doc.zIndex = getZMax({ wins: modWindows }) + 1;
           await winsUtils.save({ doc });
+
           window.dispatchEvent(
-            new CustomEvent("module-winbox-reload", { detail: {} })
+            new CustomEvent("reload-all-module-winbox", { detail: {} })
           );
         } else {
           let doc = await winsUtils.makeDoc({ name: box.displayName });
           doc._id = box._id;
           doc.type = "ModuleWindow";
-          doc.zIndex = getZMax({ wins: modWindows });
-          doc.x = modWindows.length * 30;
-          doc.y = modWindows.length * 30;
+          doc.zIndex = getZMax({ wins: modWindows }) + 1;
+          doc.x = 30;
+          doc.y = 30;
           await winsUtils.save({ doc });
+
           window.dispatchEvent(
-            new CustomEvent("module-winbox-reload", { detail: {} })
+            new CustomEvent("reload-all-module-winbox", { detail: {} })
           );
         }
       });
     };
+
     window.addEventListener("provide-module-edit-window", addWin);
     return () => {
       window.removeEventListener("provide-module-edit-window", addWin);
@@ -319,9 +325,9 @@ function ModulesSet() {
       });
     };
     reloadModWins();
-    window.addEventListener("module-winbox-reload", reloadModWins);
+    window.addEventListener("reload-all-module-winbox", reloadModWins);
     return () => {
-      window.removeEventListener("module-winbox-reload", reloadModWins);
+      window.removeEventListener("reload-all-module-winbox", reloadModWins);
     };
   }, []);
 
@@ -331,7 +337,7 @@ function ModulesSet() {
       await winsUtils.removeDoc({ doc: win });
       //
       window.dispatchEvent(
-        new CustomEvent("module-winbox-reload", { detail: {} })
+        new CustomEvent("reload-all-module-winbox", { detail: {} })
       );
     };
     window.addEventListener("close-window", closeWindow);
@@ -345,7 +351,11 @@ function ModulesSet() {
       {modWindows
         .filter((e) => e.type === "ModuleWindow")
         .map((w) => {
-          return <ModueWindow key={w._id} win={w}></ModueWindow>;
+          return (
+            <ModueWindow key={w._id} win={w}>
+              <IOEdit boxID={w.boxID}></IOEdit>
+            </ModueWindow>
+          );
         })}
     </>
   );
@@ -402,7 +412,9 @@ function TaskBtn({ children, onClick }) {
 export function TaskBarSet() {
   const { useWinBox } = useContext(ProjectContext);
   let getSlug = useWinBox((s) => s.getSlug);
+  let winsUtils = useWinBox((s) => s);
   let save = useWinBox((s) => s.save);
+  let [modWins, setModWindows] = useState([]);
   // const winboxes = useWinBox((s) => s.winboxes);
   let resetWindow = async (name, pos) => {
     let slugName = getSlug(name);
@@ -416,6 +428,10 @@ export function TaskBarSet() {
   let relayoutAll = () => {
     relayoutEditor();
     relayoutPreview();
+
+    window.dispatchEvent(
+      new CustomEvent("reload-all-module-winbox", { detail: {} })
+    );
   };
 
   let relayoutEditor = () => {
@@ -436,6 +452,27 @@ export function TaskBarSet() {
     });
   };
 
+  useEffect(() => {
+    let reloadModWins = () => {
+      winsUtils.reload().then((snaps) => {
+        let latest = snaps.filter((e) => e);
+        setModWindows(latest);
+      });
+    };
+    reloadModWins();
+    window.addEventListener("reload-all-module-winbox", reloadModWins);
+    return () => {
+      window.removeEventListener("reload-all-module-winbox", reloadModWins);
+    };
+  }, []);
+
+  let showWin = async ({ win }) => {
+    win.hidden = false;
+    win.zIndex = getZMax({ wins: modWins }) + 2;
+    await save({ doc: win });
+    window.dispatchEvent(new CustomEvent("reload-all-module-winbox"));
+  };
+
   return (
     <div
       style={{ zIndex: 999999 }}
@@ -444,6 +481,18 @@ export function TaskBarSet() {
       }
     >
       <TaskBtn onClick={relayoutAll}>Relayout Windows</TaskBtn>
+
+      {modWins
+        .slice()
+        .reverse()
+        .map((m) => {
+          return (
+            <TaskBtn key={m._id} onClick={() => showWin({ win: m })}>
+              {m.name}
+            </TaskBtn>
+          );
+        })}
+
       {/* <TaskBtn onClick={relayoutEditor}>Main Editor</TaskBtn>
     <TaskBtn onClick={relayoutPreview}>Preview Box</TaskBtn> */}
     </div>
