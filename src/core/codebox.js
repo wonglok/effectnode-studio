@@ -120,6 +120,9 @@ module.exports.box = () => {
   const removeBox = async ({ box }) => {
     let _id = box._id;
     db.get("boxes").remove({ _id }).write();
+    db.get("cables").remove({ outputBoxID: _id }).write();
+    db.get("cables").remove({ inputBoxID: _id }).write();
+
     fs.removeSync(resolvePath({ box: box }));
 
     window.dispatchEvent(new Event("try-save-state"));

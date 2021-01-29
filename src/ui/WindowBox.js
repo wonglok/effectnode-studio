@@ -7,6 +7,21 @@ import { ProjectContext } from "../pages/Project.js";
 import { PreviewBox } from "./PreviewBox.js";
 import { SVGArea } from "./SVGArea.js";
 
+const getZMax = ({ wins }) => {
+  let zidx = wins.map((e, i) => e.zIndex || i);
+  if (zidx.length === 0) {
+    zidx = [1];
+  }
+  let max = Math.max(...zidx) || 1;
+  if (max >= 65535) {
+    max = 1;
+  }
+  if (max === Infinity) {
+    max = 1;
+  }
+  return max;
+};
+
 export function WindowTemplate({
   children,
   toolBarClassName = "bg-green-400",
@@ -24,7 +39,7 @@ export function WindowTemplate({
     }
     if (!down) {
       onChange(rect);
-      onZIndex();
+      // onZIndex();
     }
   });
 
@@ -88,30 +103,16 @@ export function WindowTemplate({
     );
   };
 
-  const getZMax = () => {
-    let zidx = winboxes.map((e, i) => e.zIndex || i);
-    if (zidx.length === 0) {
-      zidx = [1];
-    }
-    let max = Math.max(...zidx) || 1;
-    if (max >= 65535) {
-      max = 1;
-    }
-    if (max === Infinity) {
-      max = 1;
-    }
-    return max;
-  };
-
   const onZIndex = () => {
-    let max = getZMax();
-    set({ ...rect, zIndex: max + 1 });
-    onChange({ ...rect, zIndex: max + 1 });
+    let max = getZMax({ wins: winboxes });
+    set((s) => ({ ...s, zIndex: max + 1 }));
+    // onChange({ ...rect, zIndex: max + 1 });
     // window.dispatchEvent(new CustomEvent("relayout-zindex"));
   };
 
   return (
     <div
+      onClick={onZIndex}
       onMouseDown={onZIndex}
       className={
         " border absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg"
@@ -222,46 +223,47 @@ export function AlwaysHereWindow({ children, name, pos }) {
   );
 }
 
-export function ModueWindow({ children, winID }) {
+export function ModueWindow({ children, win }) {
   let { useWinBox } = useContext(ProjectContext);
-  let getDoc = useWinBox((s) => s.getDoc);
+  // let getDoc = useWinBox((s) => s.getDoc);
   let save = useWinBox((s) => s.save);
-  let [doc, setDoc] = useState(false);
+  // let [doc, setDoc] = useState(false);
   // let getSlug = useWinBox((s) => s.getSlug);
 
-  useEffect(() => {
-    getDoc({ _id: winID }).then(async (doc) => {
-      if (doc) {
-        setDoc(doc);
-      } else {
-        console.log("cannot find window for module");
-      }
-    });
-  }, [winID]);
+  // useEffect(() => {
+  //   getDoc({ _id: winID }).then(async (doc) => {
+  //     if (doc) {
+  //       setDoc(doc);
+  //     } else {
+  //       console.log("cannot find window for module");
+  //     }
+  //   });
+  // }, [winID]);
 
   let onSave = async (rect) => {
     await save({ doc: rect });
-    setDoc(rect);
-    window.dispatchEvent(
-      new CustomEvent("winbox-needs-layout", { detail: {} })
-    );
+
+    // setDoc(rect);
+    // window.dispatchEvent(
+    //   new CustomEvent("module-winbox-reload", { detail: {} })
+    // );
   };
 
-  useEffect(() => {
-    let layout = async () => {
-      let doc = await getDoc({ _id: winID });
-      setDoc({ ...doc });
-    };
-    window.addEventListener("winbox-needs-layout", layout);
-    return () => {
-      window.removeEventListener("winbox-needs-layout", layout);
-    };
-  }, [winID]);
+  // useEffect(() => {
+  //   let layout = async () => {
+  //     let doc = await getDoc({ _id: winID });
+  //     setDoc({ ...doc });
+  //   };
+  //   window.addEventListener("module-winbox-reload", layout);
+  //   return () => {
+  //     window.removeEventListener("module-winbox-reload", layout);
+  //   };
+  // }, [winID]);
 
   return (
-    doc && (
+    win && (
       <WindowTemplate
-        initVal={doc}
+        initVal={win}
         toolBarClassName={"bg-green-400"}
         showToolBtn={true}
         onChange={onSave}
@@ -284,21 +286,21 @@ function ModulesSet() {
         if (doc) {
           console.log(doc);
           // setDoc(doc);
-          doc.zIndex = 4000000;
+          doc.zIndex = getZMax({ wins: modWindows });
           await winsUtils.save({ doc });
           window.dispatchEvent(
-            new CustomEvent("module-winbox-needs-layout", { detail: {} })
+            new CustomEvent("module-winbox-reload", { detail: {} })
           );
         } else {
           let doc = await winsUtils.makeDoc({ name: box.displayName });
           doc._id = box._id;
           doc.type = "ModuleWindow";
-          doc.zIndex = 4000000;
+          doc.zIndex = getZMax({ wins: modWindows });
           doc.x = modWindows.length * 30;
           doc.y = modWindows.length * 30;
           await winsUtils.save({ doc });
           window.dispatchEvent(
-            new CustomEvent("module-winbox-needs-layout", { detail: {} })
+            new CustomEvent("module-winbox-reload", { detail: {} })
           );
         }
       });
@@ -312,14 +314,14 @@ function ModulesSet() {
   useEffect(() => {
     let reloadModWins = () => {
       winsUtils.reload().then((snaps) => {
-        let latest = snaps.filter((e) => e.type === "ModuleWindow");
+        let latest = snaps.filter((e) => e);
         setModWindows(latest);
       });
     };
     reloadModWins();
-    window.addEventListener("module-winbox-needs-layout", reloadModWins);
+    window.addEventListener("module-winbox-reload", reloadModWins);
     return () => {
-      window.removeEventListener("module-winbox-needs-layout", reloadModWins);
+      window.removeEventListener("module-winbox-reload", reloadModWins);
     };
   }, []);
 
@@ -327,8 +329,9 @@ function ModulesSet() {
     let closeWindow = async ({ detail: { win } }) => {
       // console.log(win);
       await winsUtils.removeDoc({ doc: win });
+      //
       window.dispatchEvent(
-        new CustomEvent("module-winbox-needs-layout", { detail: {} })
+        new CustomEvent("module-winbox-reload", { detail: {} })
       );
     };
     window.addEventListener("close-window", closeWindow);
@@ -338,11 +341,13 @@ function ModulesSet() {
   }, []);
 
   return (
-    <span>
-      {modWindows.map((w) => {
-        return <ModueWindow key={w._id} winID={w._id}></ModueWindow>;
-      })}
-    </span>
+    <>
+      {modWindows
+        .filter((e) => e.type === "ModuleWindow")
+        .map((w) => {
+          return <ModueWindow key={w._id} win={w}></ModueWindow>;
+        })}
+    </>
   );
   // return <pre>{JSON.stringify(winboxes, null, 4)}</pre>;
 }
