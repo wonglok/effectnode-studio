@@ -22,7 +22,7 @@ function getSizing({ box }) {
   let perCharWidth = 6;
   let textLength = 10;
 
-  let boxHeight = 15;
+  let boxHeight = 17;
   let boxWidth =
     paddingX + (box.inputs || []).length * (CONNECTOR_RADIUS * 2 + 3);
 
