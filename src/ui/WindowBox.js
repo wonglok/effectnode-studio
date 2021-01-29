@@ -106,9 +106,11 @@ export function WindowTemplate({
   };
 
   const onZIndex = () => {
-    let max = getZMax({ wins: winboxes });
-    set((s) => ({ ...s, zIndex: max + 1 }));
-    // onChange({ ...rect, zIndex: max + 1 });
+    let max = getZMax({ wins: winboxes }) + 2;
+    set((s) => {
+      onChange({ ...rect, zIndex: max });
+      return { ...s, zIndex: max };
+    });
     // window.dispatchEvent(new CustomEvent("relayout-zindex"));
   };
 
@@ -353,7 +355,7 @@ function ModulesSet() {
         .map((w) => {
           return (
             <ModueWindow key={w._id} win={w}>
-              <IOEdit boxID={w.boxID}></IOEdit>
+              <IOEdit boxID={w._id}></IOEdit>
             </ModueWindow>
           );
         })}
