@@ -14,7 +14,6 @@ export const makeUseWinBoxStore = (groupID) =>
       description: "Effect Node Windows",
     });
 
-    let winboxes = [];
     let getSnaps = async () => {
       let keys = await rootStorage.keys();
       let snaps = [];
@@ -30,7 +29,7 @@ export const makeUseWinBoxStore = (groupID) =>
     });
 
     return {
-      winboxes,
+      winboxes: [],
       getDoc: async ({ _id }) => {
         return await rootStorage.getItem(_id);
       },
@@ -70,18 +69,16 @@ export const makeUseWinBoxStore = (groupID) =>
       },
       removeDoc: async ({ doc }) => {
         await rootStorage.removeItem(doc._id);
-        get().reload();
+        await get().reload();
       },
       save: async ({ doc }) => {
         await rootStorage.setItem(doc._id, doc);
-        get().reload();
+        await get().reload();
       },
       reload: async () => {
         let snaps = await getSnaps();
-        set((s) => ({
-          ...s,
-          winboxes: snaps,
-        }));
+        set({ winboxes: snaps });
+        return JSON.parse(JSON.stringify(snaps));
       },
     };
   });

@@ -1,6 +1,8 @@
+/* eslint-disable no-empty-pattern */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useContext, useEffect, useState } from "react";
-import { useDrag } from "react-use-gesture";
+/* eslint-disable no-unused-vars */
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { useDrag, useMove } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
 import { PreviewBox } from "./PreviewBox.js";
 import { SVGArea } from "./SVGArea.js";
@@ -80,6 +82,12 @@ export function WindowTemplate({
     onChange({ ...rect, hidden: true });
   };
 
+  const close = () => {
+    window.dispatchEvent(
+      new CustomEvent("close-window", { detail: { win: rect } })
+    );
+  };
+
   const getZMax = () => {
     let zidx = winboxes.map((e, i) => e.zIndex || i);
     if (zidx.length === 0) {
@@ -135,7 +143,9 @@ export function WindowTemplate({
             ></div>
             <div
               className="h-4 w-4 rounded-full mr-1 bg-red-500 cursor-pointer"
-              onClick={() => {}}
+              onClick={() => {
+                close();
+              }}
             ></div>
           </div>
         )}
@@ -149,6 +159,7 @@ export function WindowTemplate({
         className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 right-1 bg-blue-500 cursor-move"
         {...resizerBR()}
       ></div>
+
       <div
         style={{ zIndex: 10000000 }}
         className=" transition-opacity duration-500 opacity-0 group-hover:opacity-100 rounded-full w-3 h-3 absolute bottom-1 left-1 bg-blue-500 cursor-move"
@@ -192,7 +203,6 @@ export function AlwaysHereWindow({ children, name, pos }) {
       let doc = await getDoc({ _id: getSlug(name) });
       setDoc({ ...doc });
     };
-    window.addEventListener("winbox-needs-layout", layout);
     return () => {
       window.removeEventListener("winbox-needs-layout", layout);
     };
@@ -212,9 +222,132 @@ export function AlwaysHereWindow({ children, name, pos }) {
   );
 }
 
-export function WindowBox({ children }) {
-  // let { useWinBox } = useContext(ProjectContext);
+export function ModueWindow({ children, winID }) {
+  let { useWinBox } = useContext(ProjectContext);
+  let getDoc = useWinBox((s) => s.getDoc);
+  let save = useWinBox((s) => s.save);
+  let [doc, setDoc] = useState(false);
+  // let getSlug = useWinBox((s) => s.getSlug);
 
+  useEffect(() => {
+    getDoc({ _id: winID }).then(async (doc) => {
+      if (doc) {
+        setDoc(doc);
+      } else {
+        console.log("cannot find window for module");
+      }
+    });
+  }, [winID]);
+
+  let onSave = async (rect) => {
+    await save({ doc: rect });
+    setDoc(rect);
+    window.dispatchEvent(
+      new CustomEvent("winbox-needs-layout", { detail: {} })
+    );
+  };
+
+  useEffect(() => {
+    let layout = async () => {
+      let doc = await getDoc({ _id: winID });
+      setDoc({ ...doc });
+    };
+    window.addEventListener("winbox-needs-layout", layout);
+    return () => {
+      window.removeEventListener("winbox-needs-layout", layout);
+    };
+  }, [winID]);
+
+  return (
+    doc && (
+      <WindowTemplate
+        initVal={doc}
+        toolBarClassName={"bg-green-400"}
+        showToolBtn={true}
+        onChange={onSave}
+      >
+        {children}
+      </WindowTemplate>
+    )
+  );
+}
+
+function ModulesSet() {
+  let { useWinBox } = useContext(ProjectContext);
+  let winsUtils = useWinBox((s) => s);
+
+  let [modWindows, setModWindows] = useState([]);
+
+  useEffect(() => {
+    let addWin = ({ detail: { box } }) => {
+      winsUtils.getDoc({ _id: box._id }).then(async (doc) => {
+        if (doc) {
+          console.log(doc);
+          // setDoc(doc);
+          doc.zIndex = 4000000;
+          await winsUtils.save({ doc });
+          window.dispatchEvent(
+            new CustomEvent("module-winbox-needs-layout", { detail: {} })
+          );
+        } else {
+          let doc = await winsUtils.makeDoc({ name: box.displayName });
+          doc._id = box._id;
+          doc.type = "ModuleWindow";
+          doc.zIndex = 4000000;
+          doc.x = modWindows.length * 30;
+          doc.y = modWindows.length * 30;
+          await winsUtils.save({ doc });
+          window.dispatchEvent(
+            new CustomEvent("module-winbox-needs-layout", { detail: {} })
+          );
+        }
+      });
+    };
+    window.addEventListener("provide-module-edit-window", addWin);
+    return () => {
+      window.removeEventListener("provide-module-edit-window", addWin);
+    };
+  });
+
+  useEffect(() => {
+    let reloadModWins = () => {
+      winsUtils.reload().then((snaps) => {
+        let latest = snaps.filter((e) => e.type === "ModuleWindow");
+        setModWindows(latest);
+      });
+    };
+    reloadModWins();
+    window.addEventListener("module-winbox-needs-layout", reloadModWins);
+    return () => {
+      window.removeEventListener("module-winbox-needs-layout", reloadModWins);
+    };
+  }, []);
+
+  useEffect(() => {
+    let closeWindow = async ({ detail: { win } }) => {
+      // console.log(win);
+      await winsUtils.removeDoc({ doc: win });
+      window.dispatchEvent(
+        new CustomEvent("module-winbox-needs-layout", { detail: {} })
+      );
+    };
+    window.addEventListener("close-window", closeWindow);
+    return () => {
+      window.removeEventListener("close-window", closeWindow);
+    };
+  }, []);
+
+  return (
+    <span>
+      {modWindows.map((w) => {
+        return <ModueWindow key={w._id} winID={w._id}></ModueWindow>;
+      })}
+    </span>
+  );
+  // return <pre>{JSON.stringify(winboxes, null, 4)}</pre>;
+}
+
+export function WindowBox({ children }) {
   return (
     <div className={"relative h-full"}>
       <AlwaysHereWindow
@@ -240,6 +373,8 @@ export function WindowBox({ children }) {
       >
         <PreviewBox></PreviewBox>
       </AlwaysHereWindow>
+
+      <ModulesSet></ModulesSet>
 
       {children}
 
@@ -282,16 +417,16 @@ export function TaskBarSet() {
     resetWindow("Main Editor", {
       x: 10,
       y: 10,
-      w: window.innerWidth * 0.45,
-      h: window.innerHeight * 0.7,
+      w: window.innerWidth * 0.5 - 10 - 10 - 10,
+      h: window.innerHeight - 20 - 130,
     });
   };
 
   let relayoutPreview = () => {
     resetWindow("Preview Box", {
-      w: window.innerWidth * 0.45,
+      w: window.innerWidth * 0.5 - 20,
       h: window.innerHeight - 20 - 130,
-      x: window.innerWidth - window.innerWidth * 0.45 - 10,
+      x: window.innerWidth - (window.innerWidth * 0.5 - 10) - 10,
       y: 10,
     });
   };

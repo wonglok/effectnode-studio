@@ -47,6 +47,28 @@ function writeHTML({ folder }) {
   fs.writeFileSync(folder.path + "/prod/index.html", indexHTML, "utf8");
 }
 
+function writeEditorConfigFile({ folder }) {
+  let fileContent = `
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+editor.defaultFormatter = esbenp.prettier-vscode
+
+[*.md]
+trim_trailing_whitespace = false
+
+[javascript]
+editor.defaultFormatter = esbenp.prettier-vscode
+    `;
+  fs.writeFileSync(folder.path + "/.editorconfig", fileContent, "utf8");
+}
+
 function makeFolders({ folder }) {
   fs.mkdirSync(folder.path + "/prod", { recursive: true });
   fs.mkdirSync(folder.path + "/prod/dist", { recursive: true });
@@ -468,6 +490,7 @@ module.exports.createProjectFiles = function createProjectFiles({
 
   let folder = { path: folderPath };
 
+  writeEditorConfigFile({ folder });
   makeFolders({ folder });
   writeHTML({ folder });
   makeEntryJS({ folder });
@@ -475,6 +498,7 @@ module.exports.createProjectFiles = function createProjectFiles({
 
   // makeBoxJSa({ folder });
   // makeBoxJSb({ folder });
+
   makePackage({ folder });
   makeGitIgnore({ folder });
 };

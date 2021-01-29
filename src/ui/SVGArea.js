@@ -15,6 +15,31 @@ const INPUT_SEPERATOR = `_Input_`;
 const OUTPUT_SEPERATOR = `_Output_`;
 const CONNECTOR_RADIUS = 6.5;
 
+function getSizing({ box }) {
+  let fontSize = 14;
+  let paddingX = 10;
+  let paddingY = 8 + 10;
+  let perCharWidth = 6;
+  let textLength = 10;
+
+  let boxHeight = 15;
+  let boxWidth =
+    paddingX + (box.inputs || []).length * (CONNECTOR_RADIUS * 2 + 3);
+
+  let displayName = box.displayName || box.name;
+
+  return {
+    paddingX,
+    paddingY,
+    perCharWidth,
+    textLength,
+    fontSize,
+    boxHeight,
+    boxWidth,
+    displayName,
+  };
+}
+
 export function Box({
   box,
   state,
@@ -55,8 +80,14 @@ export function Box({
     ipcRenderer.send("open", filePath, root);
   };
 
-  const onClickLabel = async () => {
+  const onClickEditCode = async () => {
     openFileEditor({ box });
+  };
+
+  const onClickEditIO = () => {
+    window.dispatchEvent(
+      new CustomEvent("provide-module-edit-window", { detail: { box } })
+    );
   };
 
   const onClickRemoveLabel = async () => {
@@ -69,16 +100,6 @@ export function Box({
         graphRefresh((s) => s + 1);
       });
   };
-
-  let paddingX = 10;
-  let fontSize = 16;
-  let paddingY = 8 + 10;
-  let perCharWidth = 6;
-  let displayName = box.displayName || box.name;
-  let textLength = 10;
-
-  let boxHeight = fontSize + paddingY;
-  let boxWidth = perCharWidth * textLength + paddingX;
 
   let hasOutputCable = () => {
     let cables = state.cables;
@@ -113,7 +134,7 @@ export function Box({
           }}
           id={`${BOX_SEPERATOR}${box.moduleName}${INPUT_SEPERATOR}${input._id}`}
           r={CONNECTOR_RADIUS}
-          cx={CONNECTOR_RADIUS * 1.0 + (CONNECTOR_RADIUS + gap) * 2.0 * index}
+          cx={CONNECTOR_RADIUS * 1.5 + (CONNECTOR_RADIUS + gap) * 2.0 * index}
           cy={-CONNECTOR_RADIUS * 1.5 - 3}
           fill={isConnected ? "#77ff77" : "#ddffdd"}
           stroke={isConnected ? "#77ff77" : "#ddffdd"}
@@ -121,35 +142,69 @@ export function Box({
       );
     });
   };
+
+  let {
+    paddingX,
+    // paddingY,
+    // perCharWidth,
+    // textLength,
+    fontSize,
+    boxHeight,
+    boxWidth,
+    displayName,
+  } = getSizing({ box });
   return (
     <g transform={`translate(${drag.x}, ${drag.y})`}>
+      <defs>
+        <linearGradient id="logo-gradient" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#7A5FFF">
+            <animate
+              attributeName="stop-color"
+              values="#7A5FFF; #01FF89; #7A5FFF"
+              dur="4s"
+              repeatCount="indefinite"
+            ></animate>
+          </stop>
+
+          <stop offset="100%" stopColor="#01FF89">
+            <animate
+              attributeName="stop-color"
+              values="#01FF89; #7A5FFF; #01FF89"
+              dur="4s"
+              repeatCount="indefinite"
+            ></animate>
+          </stop>
+        </linearGradient>
+      </defs>
+
       <rect
         onClick={() => onClickBox({ box })}
         className={box.isFixed ? "cursor-not-allowed" : "cursor-move"}
         {...bind()}
-        fill={"transparent"}
+        fill={"url(#logo-gradient)"}
         stroke="#ececec"
         width={boxWidth}
         height={boxHeight}
+        rx={8}
+        ry={8}
       ></rect>
 
       <text
-        className="select-none"
+        className="select-none cursor-move"
         fill={"#ececec"}
         {...bind()}
-        x={perCharWidth * textLength + paddingX + paddingX}
+        x={boxWidth + paddingX}
         y={-fontSize * 0.5}
         fontSize={fontSize + "px"}
       >
-        * {displayName} *
+        *= {displayName} =*
       </text>
 
       <text
-        onClick={onClickLabel}
+        onClick={onClickEditCode}
         className="select-none underline cursor-pointer"
         fill={"#ececec"}
-        {...bind()}
-        x={perCharWidth * textLength + paddingX + paddingX}
+        x={boxWidth + paddingX}
         y={fontSize + 1 + 3}
         fontSize={fontSize + "px"}
       >
@@ -157,11 +212,10 @@ export function Box({
       </text>
 
       <text
-        onClick={onClickLabel}
+        onClick={onClickEditIO}
         className="select-none underline cursor-pointer"
         fill={"#ececec"}
-        {...bind()}
-        x={perCharWidth * textLength + paddingX + paddingX}
+        x={boxWidth + paddingX}
         y={fontSize + 1 + fontSize + 1 + 10}
         fontSize={fontSize + "px"}
       >
@@ -173,8 +227,7 @@ export function Box({
           onClick={onClickRemoveLabel}
           className="select-none underline cursor-pointer"
           fill={"#ffecec"}
-          {...bind()}
-          x={perCharWidth * textLength + paddingX + paddingX}
+          x={boxWidth + paddingX}
           y={fontSize + 1 + fontSize + 1 + 35}
           fontSize={fontSize + "px"}
         >
@@ -193,8 +246,8 @@ export function Box({
         }
         id={`${BOX_SEPERATOR}${box.moduleName}${OUTPUT_SEPERATOR}${"output"}`}
         r={CONNECTOR_RADIUS}
-        cx={CONNECTOR_RADIUS * 0.0 + boxWidth / 2}
-        cy={CONNECTOR_RADIUS * 1.5 + boxHeight}
+        cx={CONNECTOR_RADIUS * 0.0 + 0.5 * boxWidth}
+        cy={CONNECTOR_RADIUS * 2 + boxHeight}
         fill={isOutputConnected ? "#7777ff" : "#ddddff"}
         stroke={isOutputConnected ? "#7777ff" : "#ddddff"}
       ></circle>
