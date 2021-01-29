@@ -3,7 +3,7 @@ import slugify from "slugify";
 const _ = window.require("lodash");
 const smalltalk = require("smalltalk");
 let path = window.require("path");
-let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`;
+export const getID = () => `_${(Math.random() * 100000000).toFixed(0)}`;
 let fs = window.require("fs-extra");
 
 function makeSlug(str) {
@@ -114,7 +114,7 @@ module.exports.box = () => {
 
     window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-state-to-webview"));
-    window.dispatchEvent(new Event("reoad-page"));
+    window.dispatchEvent(new Event("reload-page"));
   };
 
   const removeBox = async ({ box }) => {
@@ -127,7 +127,7 @@ module.exports.box = () => {
 
     window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-state-to-webview"));
-    window.dispatchEvent(new Event("reoad-page"));
+    window.dispatchEvent(new Event("reload-page"));
   };
 
   let addCable = ({ outputBoxID, inputBoxID, inputSlotID }) => {
@@ -144,7 +144,7 @@ module.exports.box = () => {
 
     saveInstant(db.getState());
     // window.dispatchEvent(new Event("stream-state-to-webview"));
-    window.dispatchEvent(new Event("reoad-page"));
+    window.dispatchEvent(new Event("reload-page"));
   };
 
   let removeCable = ({ cableID }) => {
@@ -154,7 +154,26 @@ module.exports.box = () => {
 
     saveInstant(db.getState());
     // window.dispatchEvent(new Event("stream-state-to-webview"));
-    window.dispatchEvent(new Event("reoad-page"));
+    window.dispatchEvent(new Event("reload-page"));
+  };
+
+  let disconnectCableByBoxInput = ({ inputID }) => {
+    db.get("cables").remove({ inputSlotID: inputID }).write();
+
+    saveInstant(db.getState());
+    // window.dispatchEvent(new Event("stream-state-to-webview"));
+    window.dispatchEvent(new Event("reload-page"));
+  };
+
+  let removeInputByInputID = async ({ inputID, boxID }) => {
+    db.get("boxes")
+      .find({ _id: boxID })
+      .get("inputs")
+      .remove({ _id: inputID })
+      .write();
+    saveInstant(db.getState());
+    // window.dispatchEvent(new Event("stream-state-to-webview"));
+    window.dispatchEvent(new Event("reload-page"));
   };
 
   const resolvePath = ({ box }) => {
@@ -174,6 +193,8 @@ module.exports.box = () => {
   };
 
   return {
+    removeInputByInputID,
+    disconnectCableByBoxInput,
     removeCable,
     addCable,
 

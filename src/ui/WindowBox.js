@@ -108,7 +108,7 @@ export function WindowTemplate({
   const onZIndex = () => {
     let max = getZMax({ wins: winboxes }) + 2;
     set((s) => {
-      onChange({ ...rect, zIndex: max });
+      onChange({ ...s, zIndex: max });
       return { ...s, zIndex: max };
     });
     // window.dispatchEvent(new CustomEvent("relayout-zindex"));
@@ -116,7 +116,6 @@ export function WindowTemplate({
 
   return (
     <div
-      onClick={onZIndex}
       onMouseDown={onZIndex}
       className={
         " absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg shadow-xl"
@@ -231,8 +230,12 @@ export function ModueWindow({ children, win }) {
   let { useWinBox } = useContext(ProjectContext);
   // let getDoc = useWinBox((s) => s.getDoc);
   let save = useWinBox((s) => s.save);
-  // let [doc, setDoc] = useState(false);
+  let [doc, setDoc] = useState(win);
   // let getSlug = useWinBox((s) => s.getSlug);
+
+  useEffect(() => {
+    setDoc(win);
+  }, [win]);
 
   // useEffect(() => {
   //   getDoc({ _id: winID }).then(async (doc) => {
@@ -246,11 +249,10 @@ export function ModueWindow({ children, win }) {
 
   let onSave = async (rect) => {
     await save({ doc: rect });
-
-    // setDoc(rect);
-    // window.dispatchEvent(
-    //   new CustomEvent("reload-all-module-winbox", { detail: {} })
-    // );
+    setDoc(rect);
+    window.dispatchEvent(
+      new CustomEvent("reload-all-module-winbox", { detail: {} })
+    );
   };
 
   // useEffect(() => {
@@ -265,10 +267,10 @@ export function ModueWindow({ children, win }) {
   // }, [winID]);
 
   return (
-    win &&
-    !win.hidden && (
+    doc &&
+    !doc.hidden && (
       <WindowTemplate
-        initVal={win}
+        initVal={doc}
         toolBarClassName={"bg-green-400"}
         showToolBtn={true}
         onChange={onSave}
@@ -281,30 +283,30 @@ export function ModueWindow({ children, win }) {
 
 function ModulesSet() {
   let { useWinBox } = useContext(ProjectContext);
-  let winsUtils = useWinBox((s) => s);
+  let winUtils = useWinBox((s) => s);
 
   let [modWindows, setModWindows] = useState([]);
 
   useEffect(() => {
     let addWin = ({ detail: { box } }) => {
-      winsUtils.getDoc({ _id: box._id }).then(async (doc) => {
+      winUtils.getDoc({ _id: box._id }).then(async (doc) => {
         if (doc) {
           console.log(doc);
           // setDoc(doc);
-          doc.zIndex = getZMax({ wins: modWindows }) + 1;
-          await winsUtils.save({ doc });
+          doc.zIndex = getZMax({ wins: modWindows }) + 50;
+          await winUtils.save({ doc });
 
           window.dispatchEvent(
             new CustomEvent("reload-all-module-winbox", { detail: {} })
           );
         } else {
-          let doc = await winsUtils.makeDoc({ name: box.displayName });
+          let doc = await winUtils.makeDoc({ name: box.displayName });
           doc._id = box._id;
           doc.type = "ModuleWindow";
-          doc.zIndex = getZMax({ wins: modWindows }) + 1;
-          doc.x = 30;
-          doc.y = 30;
-          await winsUtils.save({ doc });
+          doc.zIndex = getZMax({ wins: modWindows }) + 50;
+          doc.x = 20;
+          doc.y = 20;
+          await winUtils.save({ doc });
 
           window.dispatchEvent(
             new CustomEvent("reload-all-module-winbox", { detail: {} })
@@ -321,7 +323,7 @@ function ModulesSet() {
 
   useEffect(() => {
     let reloadModWins = () => {
-      winsUtils.reload().then((snaps) => {
+      winUtils.reload().then((snaps) => {
         let latest = snaps.filter((e) => e);
         setModWindows(latest);
       });
@@ -335,9 +337,7 @@ function ModulesSet() {
 
   useEffect(() => {
     let closeWindow = async ({ detail: { win } }) => {
-      // console.log(win);
-      await winsUtils.removeDoc({ doc: win });
-      //
+      await winUtils.removeDoc({ doc: win });
       window.dispatchEvent(
         new CustomEvent("reload-all-module-winbox", { detail: {} })
       );
@@ -355,7 +355,7 @@ function ModulesSet() {
         .map((w) => {
           return (
             <ModueWindow key={w._id} win={w}>
-              <IOEdit boxID={w._id}></IOEdit>
+              <IOEdit boxID={w._id} win={w}></IOEdit>
             </ModueWindow>
           );
         })}
@@ -404,7 +404,7 @@ function TaskBtn({ children, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="px-3 inline-flex items-center bg-opacity-25 bg-white h-full cursor-pointer select-none mr-2 rounded-xl"
+      className=" capitalize px-3 inline-flex items-center bg-opacity-25 bg-white h-full cursor-pointer select-none mr-2 rounded-xl"
     >
       {children}
     </div>
@@ -427,17 +427,17 @@ export function TaskBarSet() {
     );
   };
 
-  let relayoutAll = () => {
-    relayoutEditor();
-    relayoutPreview();
+  let relayoutAll = async () => {
+    await relayoutEditor();
+    await relayoutPreview();
 
     window.dispatchEvent(
       new CustomEvent("reload-all-module-winbox", { detail: {} })
     );
   };
 
-  let relayoutEditor = () => {
-    resetWindow("Main Editor", {
+  let relayoutEditor = async () => {
+    await resetWindow("Main Editor", {
       x: 10,
       y: 10,
       w: window.innerWidth * 0.5 - 10 - 10 - 10,
@@ -445,8 +445,8 @@ export function TaskBarSet() {
     });
   };
 
-  let relayoutPreview = () => {
-    resetWindow("Preview Box", {
+  let relayoutPreview = async () => {
+    await resetWindow("Preview Box", {
       w: window.innerWidth * 0.5 - 20,
       h: window.innerHeight - 20 - 130,
       x: window.innerWidth - (window.innerWidth * 0.5 - 10) - 10,

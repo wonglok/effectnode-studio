@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useDrag, useWheel } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project";
-import smalltalk from "smalltalk";
+import smalltalk from "./smalltalk/smalltalk";
 
 const BOX_SEPERATOR = `BOX_`;
 const INPUT_SEPERATOR = `_Input_`;
@@ -24,7 +24,7 @@ function getSizing({ box }) {
 
   let boxHeight = 17;
   let boxWidth =
-    paddingX + (box.inputs || []).length * (CONNECTOR_RADIUS * 2 + 3);
+    paddingX + (box.inputs || []).length * (CONNECTOR_RADIUS * 2 + 5.5);
 
   let displayName = box.displayName || box.name;
 
@@ -197,7 +197,7 @@ export function Box({
         y={-fontSize * 0.5}
         fontSize={fontSize + "px"}
       >
-        *= {displayName} =*
+        {displayName}
       </text>
 
       <text
@@ -550,6 +550,16 @@ export function SVGEditor({ rect, state }) {
   const { boxesUtil, root, lowdb } = useContext(ProjectContext);
 
   useEffect(() => {
+    let refresher = () => {
+      refresh((s) => s + 1);
+    };
+    window.addEventListener("refresh-main-editor", refresher);
+    return () => {
+      window.removeEventListener("refresh-main-editor", refresher);
+    };
+  }, []);
+
+  useEffect(() => {
     function zoom(e) {
       e.preventDefault();
       if (e.ctrlKey) {
@@ -774,7 +784,12 @@ export function SVGEditor({ rect, state }) {
       viewBox={`${pan.x} ${pan.y} ${rect.width * zoom} ${rect.height * zoom}`}
     >
       <rect
-        onClick={() => setHandMode(false)}
+        onClick={() => {
+          if (hand) {
+            // await addModuleClick();
+            setHandMode(false);
+          }
+        }}
         x={pan.x}
         y={pan.y}
         width={rect.width}
@@ -818,14 +833,14 @@ export function SVGEditor({ rect, state }) {
         </text>
 
         <text
-          x={"Reset View".length * 7 + 150 + pan.x}
+          x={"Reset View".length * 7 + 130 + pan.x}
           y={10 + 17 + pan.y}
           onClick={openCore}
           fontSize="17"
           fill="white"
           className="underline cursor-pointer"
         >
-          Edit Core File
+          Edit CORE
         </text>
       </g>
 
