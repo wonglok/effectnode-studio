@@ -33,13 +33,18 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
   const path = window.require("path");
   const fs = window.require("fs-extra");
   const entryFiles = path.join(projectRoot, "./src/js/entry.js");
-  const metaFileSRC = path.join(projectRoot, "./src/js/meta.json");
+
   const ensureMetaFolderPath = path.join(projectRoot, "./prod/dist/js/");
+  const metaFileSRC = path.join(projectRoot, "./src/js/meta.json");
   const metaFileProd = path.join(projectRoot, "./prod/dist/js/meta.json");
 
   let copyMETA = async () => {
-    await fs.ensureDir(ensureMetaFolderPath);
-    await fs.copy(metaFileSRC, metaFileProd);
+    try {
+      await fs.ensureDir(ensureMetaFolderPath);
+      await fs.copy(metaFileSRC, metaFileProd);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const options = {
