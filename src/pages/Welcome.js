@@ -50,6 +50,7 @@ export const RecentItem = ({ doc, alt }) => {
       throw new Error(`folder dont have project files`);
     }
   };
+
   return (
     <div
       className={
@@ -119,28 +120,30 @@ export function Welcome() {
       await save({ doc });
     }
   };
-  let createProject = async () => {
-    try {
-      let { ok, folder, cancel } = await electron.ipcRenderer.invoke(
-        "checkEmptyFolder",
-        {}
-      );
-      if (ok) {
-        await electron.ipcRenderer.invoke("createProjectFiles", folder);
-        await saveFav({ folderPath: folder });
-        window.location.hash = String(
-          `/project?url=${encodeURIComponent(folder)}`
-        );
-      } else {
-        if (!cancel) {
-          window.alert("Please Select Empty Folder.");
-        }
-        throw new Error(`folder isn't empty.`);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
+
+  // let createProject = async () => {
+  //   try {
+  //     let { ok, folder, cancel } = await electron.ipcRenderer.invoke(
+  //       "checkEmptyFolder",
+  //       {}
+  //     );
+  //     if (ok) {
+  //       await electron.ipcRenderer.invoke("createProjectFiles", folder);
+  //       await saveFav({ folderPath: folder });
+  //       window.location.hash = String(
+  //         `/project?url=${encodeURIComponent(folder)}`
+  //       );
+  //     } else {
+  //       if (!cancel) {
+  //         window.alert("Please Select Empty Folder.");
+  //       }
+  //       throw new Error(`folder isn't empty.`);
+  //     }
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
+
   let openFolder = async () => {
     try {
       let { ok, folder, cancel } = await electron.ipcRenderer.invoke(
@@ -168,6 +171,10 @@ export function Welcome() {
       console.log(e);
     }
   };
+  let openDownloader = () => {
+    const { shell } = window.require("electron");
+    shell.openExternal("https://effectnode.com");
+  };
   return (
     <Layout title={"Creative Coding with Boxes and Cables"}>
       <div
@@ -180,12 +187,12 @@ export function Welcome() {
       {
         <div className={"flex justify-center flex-wrap lg:p-4"}>
           <ThankYouCard
-            onClick={createProject}
-            text={"Create New Project"}
+            onClick={openDownloader}
+            text={"Download New Project Template"}
             extraClass={"cursor-pointer  select-none"}
           >
             <div className={"h-full w-full flex justify-center items-center"}>
-              <img src={require("../images/add.svg")} alt="add" />
+              <img src={require("../images/download.svg")} alt="add" />
             </div>
           </ThankYouCard>
 

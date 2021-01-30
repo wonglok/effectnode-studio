@@ -816,6 +816,15 @@ export function SVGEditor({ rect, state }) {
     };
   });
 
+  let openFolder = () => {
+    let { ipcRenderer } = window.require("electron");
+    ipcRenderer.send("open", root);
+  };
+
+  let reloadSystem = () => {
+    window.location.reload();
+  };
+
   return (
     <svg
       ref={svg}
@@ -888,6 +897,28 @@ export function SVGEditor({ rect, state }) {
           className="underline cursor-pointer"
         >
           Edit CORE
+        </text>
+
+        <text
+          x={280 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={openFolder}
+          fontSize="17"
+          fill="white"
+          className="underline cursor-pointer"
+        >
+          Project Folder
+        </text>
+
+        <text
+          x={380 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={reloadSystem}
+          fontSize="17"
+          fill="white"
+          className="underline cursor-pointer"
+        >
+          Reload System
         </text>
       </g>
 
