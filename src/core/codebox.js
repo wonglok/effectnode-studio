@@ -51,6 +51,8 @@ export const useBoxes = ({ db, root }) => {
     window.dispatchEvent(new Event("stream-state-to-webview"));
   };
 
+  const renameBox = async ({ box }) => {};
+
   const sepToken = `__ID__`;
 
   const addBox = async () => {
@@ -63,10 +65,10 @@ export const useBoxes = ({ db, root }) => {
       "Please enter name for your new box.",
       "Example: newbox"
     );
-    let name = displayName || "box";
-    let slug = makeSlug(name);
+    let tempName = displayName || "box";
+    let slug = makeSlug(tempName);
 
-    let moduleName = `${_id}${sepToken}${slug}`;
+    let moduleName = `${slug}${sepToken}${_id}`;
     let fileName = `${moduleName}.js`;
     let filePath = path.join(root, `./src/js/boxes/${fileName}`);
     let newBox = {
@@ -204,6 +206,7 @@ module.exports.box = () => {
     resolvePath,
     updateBox,
     removeBox,
+    renameBox,
     addBox,
   };
 };

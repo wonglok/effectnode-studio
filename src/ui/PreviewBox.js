@@ -57,13 +57,13 @@ export function PreviewBox() {
     };
 
     let flushAfterRefresh = () => {
-      webview.current.src = `http://localhost:${server.port}?r=${0}`;
       let once = () => {
         streamState();
         webview.current.removeEventListener("dom-ready", once);
       };
       webview.current.addEventListener("dom-ready", once);
-      streamState();
+      webview.current.src = `http://localhost:${server.port}?r=${0}`;
+      // streamState();
     };
 
     flushAfterRefresh();

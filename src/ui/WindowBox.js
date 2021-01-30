@@ -44,9 +44,9 @@ export function WindowTemplate({
     }
   });
 
-  // useEffect(() => {
-  //   set(initVal);
-  // }, [initVal]);
+  useEffect(() => {
+    set(initVal);
+  }, [initVal]);
 
   const resizerBR = useDrag(({ down, delta: [dx, dy] }) => {
     if (down) {
@@ -196,7 +196,7 @@ export function AlwaysHereWindow({ children, name, pos }) {
 
   let onSave = async (rect) => {
     await save({ doc: rect });
-    setDoc(rect);
+    // setDoc(rect);
     window.dispatchEvent(
       new CustomEvent("winbox-needs-layout", { detail: {} })
     );
@@ -207,6 +207,7 @@ export function AlwaysHereWindow({ children, name, pos }) {
       let doc = await getDoc({ _id: getSlug(name) });
       setDoc({ ...doc });
     };
+    window.addEventListener("winbox-needs-layout", layout);
     return () => {
       window.removeEventListener("winbox-needs-layout", layout);
     };
@@ -230,12 +231,12 @@ export function ModueWindow({ children, win }) {
   let { useWinBox } = useContext(ProjectContext);
   // let getDoc = useWinBox((s) => s.getDoc);
   let save = useWinBox((s) => s.save);
-  let [doc, setDoc] = useState(win);
+  // let [doc, setDoc] = useState(win);
   // let getSlug = useWinBox((s) => s.getSlug);
 
-  useEffect(() => {
-    setDoc(win);
-  }, [win]);
+  // useEffect(() => {
+  //   setDoc(win);
+  // }, [win]);
 
   // useEffect(() => {
   //   getDoc({ _id: winID }).then(async (doc) => {
@@ -249,7 +250,7 @@ export function ModueWindow({ children, win }) {
 
   let onSave = async (rect) => {
     await save({ doc: rect });
-    setDoc(rect);
+    // setDoc(rect);
     window.dispatchEvent(
       new CustomEvent("reload-all-module-winbox", { detail: {} })
     );
@@ -267,10 +268,10 @@ export function ModueWindow({ children, win }) {
   // }, [winID]);
 
   return (
-    doc &&
-    !doc.hidden && (
+    win &&
+    !win.hidden && (
       <WindowTemplate
-        initVal={doc}
+        initVal={win}
         toolBarClassName={"bg-green-400"}
         showToolBtn={true}
         onChange={onSave}
@@ -470,9 +471,12 @@ export function TaskBarSet() {
 
   let showWin = async ({ win }) => {
     win.hidden = false;
-    win.zIndex = getZMax({ wins: modWins }) + 2;
+    win.zIndex = getZMax({ wins: modWins }) + 10;
     await save({ doc: win });
     window.dispatchEvent(new CustomEvent("reload-all-module-winbox"));
+    window.dispatchEvent(
+      new CustomEvent("winbox-needs-layout", { detail: {} })
+    );
   };
 
   return (

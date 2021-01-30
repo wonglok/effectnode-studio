@@ -21,7 +21,7 @@ function makeHTMLCode() {
     <div id="root"></div>
     <script src="./dist/js/entry.js"></script>
     <script>
-      console.log(window.MyCanvas.default({ mounter: document.querySelector('#root') }))
+      window.MyCanvas.default({ mounter: document.querySelector('#root') });
     </script>
   </body>
   </html>`;
@@ -31,7 +31,16 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
   const Bundler = window.require("parcel-bundler");
   const getPort = window.require("get-port");
   const path = window.require("path");
+  const fs = window.require("fs-extra");
   const entryFiles = path.join(projectRoot, "./src/js/entry.js");
+  const metaFileSRC = path.join(projectRoot, "./src/js/meta.json");
+  const ensureMetaFolderPath = path.join(projectRoot, "./prod/dist/js/");
+  const metaFileProd = path.join(projectRoot, "./prod/dist/js/meta.json");
+
+  let copyMETA = async () => {
+    await fs.ensureDir(ensureMetaFolderPath);
+    await fs.copy(metaFileSRC, metaFileProd);
+  };
 
   const options = {
     outDir: path.join(projectRoot, "./prod/dist/js/"), // The out directory to put the build files in, defaults to dist
@@ -97,13 +106,14 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
         await bundler.bundle();
       },
       onDonePack: (donePack) => {
-        window.addEventListener("done-packing", () => {
+        let donePackingHandler = async () => {
+          await copyMETA();
           donePack({ port });
-        });
+        };
+
+        window.addEventListener("done-packing", donePackingHandler);
         return () => {
-          window.removeEventListener("done-packing", () => {
-            donePack({ port });
-          });
+          window.removeEventListener("done-packing", donePackingHandler);
         };
       },
     });

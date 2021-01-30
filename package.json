@@ -43,6 +43,7 @@
     "three": "^0.124.0",
     "update-electron-app": "^1.2.0",
     "use-immer": "^0.4.2",
+    "valtio": "^0.6.3",
     "worker-loader": "^3.0.7",
     "zustand": "^3.3.1"
   },

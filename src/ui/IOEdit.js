@@ -5,12 +5,16 @@ import smalltalk from "./smalltalk/smalltalk";
 import { getID } from "../core/codebox";
 export function IOEdit({ boxID, win }) {
   const { boxesUtil, lowdb } = useContext(ProjectContext);
-  const [refreshID, refresh] = useState(0);
+  const [, refresh] = useState(0);
 
   useEffect(() => {
-    window.addEventListener("reload-page", () => {
+    let reload = () => {
       refresh((s) => s + 1);
-    });
+    };
+    window.addEventListener("reload-page", reload);
+    return () => {
+      window.removeEventListener("reload-page", reload);
+    };
   }, []);
 
   const box = useMemo(() => {

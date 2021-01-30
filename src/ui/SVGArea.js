@@ -122,7 +122,7 @@ export function Box({
       return (
         <circle
           key={input._id + box._id}
-          style={{ cursor: isConnected ? "auto" : "pointer" }}
+          style={{ cursor: isConnected ? "" : "alias" }}
           onClick={() => {
             if (!isConnected) {
               onClickInput({
@@ -822,7 +822,7 @@ export function SVGEditor({ rect, state }) {
       {...bind()}
       style={{
         backgroundColor: "#444444",
-        cursor: hand && hand.type === "output" ? "copy" : "",
+        cursor: hand && hand.type === "output" ? "cell" : "",
       }}
       width={rect.width}
       height={rect.height}

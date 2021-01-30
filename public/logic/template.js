@@ -89,7 +89,6 @@ function makeEntryJS({ folder }) {
   /* ----- START ---- */
 
   let codeJS = /* jsx */ `
-
 import "regenerator-runtime/runtime";
 import BoxScripts from "./boxes/*.js";
 import lowdb from "lowdb";
@@ -196,8 +195,8 @@ function MyCore({ mounter }) {
     },
   };
 
-  let onEachBox = ({ box, boxes, cables, eventBus }) => {
-    let streamFrom = (nameOrIDX, cb) => {
+  let setupEachBox = ({ box, boxes, cables, eventBus }) => {
+    let inputAt = (nameOrIDX) => {
       let inputs = box.inputs;
 
       let input = inputs[nameOrIDX];
@@ -207,13 +206,28 @@ function MyCore({ mounter }) {
       }
 
       if (input) {
-        eventBus.on(input._id, cb);
+        return {
+          onStream: (cb) => {
+            eventBus.on(input._id, cb);
+            return () => {
+              eventBus.off(input._id, cb);
+            };
+          },
+        };
       } else {
         console.log(box.moduleName, "not found input of", nameOrIDX);
+        return {
+          onStream: () => {
+            console.log(box.moduleName, "not found input of", nameOrIDX);
+            return () => {
+              console.log(box.moduleName, "not found input of", nameOrIDX);
+            };
+          },
+        };
       }
     };
 
-    let send = (data) => {
+    let pulse = (data) => {
       let outCables = cables.filter((c) => c.outputBoxID === box._id);
       outCables.forEach((cable) => {
         eventBus.emit(cable.inputSlotID, data);
@@ -223,8 +237,9 @@ function MyCore({ mounter }) {
     BoxScripts[box.moduleName].box({
       context,
       domElement: mounter,
-      send,
-      streamFrom,
+      pulse,
+      inputAt,
+      graph: lowdb,
     });
   };
 
@@ -234,7 +249,7 @@ function MyCore({ mounter }) {
     let eventBus = new EventEmitter();
 
     for (let box of boxes) {
-      onEachBox({ box, boxes, cables, eventBus });
+      setupEachBox({ box, boxes, cables, eventBus });
     }
   };
 
@@ -247,6 +262,9 @@ function main({ mounter }) {
     MyCore({ mounter });
   });
 }
+
+// insert react code here.... as core... adatper
+// or export the component or threejs object3d for other applications.
 
 export default main;
 export { main };

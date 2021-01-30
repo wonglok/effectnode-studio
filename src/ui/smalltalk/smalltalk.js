@@ -1,5 +1,4 @@
-"use strict";
-
+/* eslint-disable array-callback-return */
 require("./css/smalltalk.css");
 
 const currify = require("currify");
