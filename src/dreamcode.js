@@ -17,3 +17,10 @@ module.exports.box = ({ setup, domElement }) => {
     name: "app",
   };
 };
+
+//
+
+// core file
+
+// insert react code here.... as core... adatper
+// or export the component or threejs object3d for other applications.

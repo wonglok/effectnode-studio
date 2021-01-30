@@ -454,7 +454,13 @@ let LogicCable = ({
 
   useEffect(() => {
     let inputSlot = inputBox.inputs.find((i) => i._id === cable.inputSlotID);
-
+    if (!inputSlot || !outputBox || !inputBox) {
+      smalltalk.confirm("remove broken lines?", "").then(() => {
+        boxesUtil.removeCable({ cableID: cable._id });
+        refresh((s) => s + 1);
+      });
+      return () => {};
+    }
     let outputSlotDOM = document.querySelector(
       `#${BOX_SEPERATOR}${outputBox.moduleName}${OUTPUT_SEPERATOR}${"output"}`
     );
@@ -752,6 +758,41 @@ export function SVGEditor({ rect, state }) {
     // console.log(lowdb.get("boxes").value());
   };
 
+  const addModuleWithConnection = async ({ position }) => {
+    if (hand.type === "output") {
+      let { box } = await boxesUtil.addBox().catch(() => {
+        setHandMode(false);
+        return { box: false };
+      });
+
+      if (!box) {
+        return;
+      }
+
+      let inputBox = box;
+      let inputBoxID = box._id;
+      let input = inputBox.inputs[0];
+      let inputSlotID = input._id;
+
+      let outputBox = hand.box;
+      let outputBoxID = outputBox._id;
+
+      if (!outputBoxID || !inputBox || !inputSlotID) {
+        return;
+      }
+      // let outputBoxID = hand.
+      await boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
+
+      box.x = position.x + -50;
+      box.y = position.y - 50;
+      await boxesUtil.updateBox({ box });
+
+      refresh((s) => s + rID + 1);
+    }
+
+    setHandMode(false);
+  };
+
   let openCore = () => {
     let { ipcRenderer } = window.require("electron");
     let box = {
@@ -784,10 +825,12 @@ export function SVGEditor({ rect, state }) {
       viewBox={`${pan.x} ${pan.y} ${rect.width * zoom} ${rect.height * zoom}`}
     >
       <rect
-        onClick={() => {
+        onClick={async (ev) => {
           if (hand) {
-            // await addModuleClick();
-            setHandMode(false);
+            await addModuleWithConnection({
+              position: { x: ev.clientX, y: ev.clientY },
+            });
+          } else {
           }
         }}
         x={pan.x}

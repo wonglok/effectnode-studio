@@ -69,34 +69,33 @@ export const useBoxes = ({ db, root }) => {
     let moduleName = `${_id}${sepToken}${slug}`;
     let fileName = `${moduleName}.js`;
     let filePath = path.join(root, `./src/js/boxes/${fileName}`);
-    db.get("boxes")
-      .push({
-        isFirstUserBox: boxes.length === 0,
-        isProtected: false,
-        isUserBoxes: true,
-        _id,
-        x: 20,
-        y: 60 + 55 * boxes.length,
-        displayName,
-        moduleName,
-        fileName,
-        slug,
-        inputs: [
-          {
-            _id: getID(),
-            name: "main",
-          },
-          {
-            _id: getID(),
-            name: "speed",
-          },
-          {
-            _id: getID(),
-            name: "color",
-          },
-        ],
-      })
-      .write();
+    let newBox = {
+      isFirstUserBox: boxes.length === 0,
+      isProtected: false,
+      isUserBoxes: true,
+      _id,
+      x: 120,
+      y: 160,
+      displayName,
+      moduleName,
+      fileName,
+      slug,
+      inputs: [
+        {
+          _id: getID(),
+          name: "main",
+        },
+        {
+          _id: getID(),
+          name: "speed",
+        },
+        {
+          _id: getID(),
+          name: "color",
+        },
+      ],
+    };
+    db.get("boxes").push(newBox).write();
 
     fs.ensureDirSync(path.join(root, `./src/js/boxes/`));
     fs.ensureFileSync(filePath);
@@ -115,6 +114,10 @@ module.exports.box = () => {
     window.dispatchEvent(new Event("try-save-state"));
     window.dispatchEvent(new Event("stream-state-to-webview"));
     window.dispatchEvent(new Event("reload-page"));
+
+    return {
+      box: newBox,
+    };
   };
 
   const removeBox = async ({ box }) => {
