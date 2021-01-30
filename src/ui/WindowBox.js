@@ -44,9 +44,9 @@ export function WindowTemplate({
     }
   });
 
-  useEffect(() => {
-    set(initVal);
-  }, [initVal]);
+  // useEffect(() => {
+  //   set(initVal);
+  // }, [initVal]);
 
   const resizerBR = useDrag(({ down, delta: [dx, dy] }) => {
     if (down) {
