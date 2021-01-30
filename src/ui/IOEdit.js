@@ -26,16 +26,19 @@ export function IOEdit({ boxID, win }) {
   let onRemove = async ({ input, idx, array }) => {
     if (!hasCable(input._id)) {
       console.log("remove");
-      smalltalk.confirm("Remove input?", input.name || "").then(async () => {
-        await boxesUtil.removeInputByInputID({
-          boxID: box._id,
-          inputID: input._id,
-        });
-        refresh((s) => s + 1);
-        window.dispatchEvent(
-          new CustomEvent("refresh-main-editor", { detail: {} })
-        );
-      });
+      smalltalk
+        .confirm("Remove input?", input.name || "")
+        .then(async () => {
+          await boxesUtil.removeInputByInputID({
+            boxID: box._id,
+            inputID: input._id,
+          });
+          refresh((s) => s + 1);
+          window.dispatchEvent(
+            new CustomEvent("refresh-main-editor", { detail: {} })
+          );
+        })
+        .catch(() => {});
     } else {
       // disconnect
       smalltalk
@@ -46,7 +49,8 @@ export function IOEdit({ boxID, win }) {
           window.dispatchEvent(
             new CustomEvent("refresh-main-editor", { detail: {} })
           );
-        });
+        })
+        .catch(() => {});
     }
   };
 

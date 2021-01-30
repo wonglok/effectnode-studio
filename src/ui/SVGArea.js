@@ -98,7 +98,8 @@ export function Box({
       })
       .then(() => {
         graphRefresh((s) => s + 1);
-      });
+      })
+      .catch(console.log);
   };
 
   let hasOutputCable = () => {
@@ -783,7 +784,7 @@ export function SVGEditor({ rect, state }) {
       // let outputBoxID = hand.
       await boxesUtil.addCable({ outputBoxID, inputBoxID, inputSlotID });
 
-      box.x = position.x + -50;
+      box.x = position.x - 50;
       box.y = position.y - 50;
       await boxesUtil.updateBox({ box });
 
@@ -819,7 +820,10 @@ export function SVGEditor({ rect, state }) {
     <svg
       ref={svg}
       {...bind()}
-      style={{ backgroundColor: "#444444" }}
+      style={{
+        backgroundColor: "#444444",
+        cursor: hand && hand.type === "output" ? "copy" : "",
+      }}
       width={rect.width}
       height={rect.height}
       viewBox={`${pan.x} ${pan.y} ${rect.width * zoom} ${rect.height * zoom}`}
