@@ -14,9 +14,6 @@ const getZMax = ({ wins }) => {
     zidx = [1];
   }
   let max = Math.max(...zidx) || 1;
-  if (max >= 65535) {
-    max = 1;
-  }
   if (max === Infinity) {
     max = 1;
   }
@@ -107,6 +104,8 @@ export function WindowTemplate({
 
   const onZIndex = () => {
     let max = getZMax({ wins: winboxes }) + 2;
+
+    //
     set((s) => {
       onChange({ ...s, zIndex: max });
       return { ...s, zIndex: max };
@@ -174,12 +173,12 @@ export function WindowTemplate({
 }
 
 export function AlwaysHereWindow({ children, name, pos }) {
-  let { useWinBox } = useContext(ProjectContext);
-  let getDoc = useWinBox((s) => s.getDoc);
-  let makeDoc = useWinBox((s) => s.makeDoc);
-  let save = useWinBox((s) => s.save);
-  let getSlug = useWinBox((s) => s.getSlug);
-  let [doc, setDoc] = useState(false);
+  const { useWinBox } = useContext(ProjectContext);
+  const getDoc = useWinBox((s) => s.getDoc);
+  const makeDoc = useWinBox((s) => s.makeDoc);
+  const save = useWinBox((s) => s.save);
+  const getSlug = useWinBox((s) => s.getSlug);
+  const [doc, setDoc] = useState(false);
 
   useEffect(() => {
     getDoc({ _id: getSlug(name) }).then(async (doc) => {
@@ -229,14 +228,14 @@ export function AlwaysHereWindow({ children, name, pos }) {
 
 export function ModueWindow({ children, win }) {
   let { useWinBox } = useContext(ProjectContext);
-  // let getDoc = useWinBox((s) => s.getDoc);
+  let getDoc = useWinBox((s) => s.getDoc);
   let save = useWinBox((s) => s.save);
-  // let [doc, setDoc] = useState(win);
+  let [doc, setDoc] = useState(win);
   // let getSlug = useWinBox((s) => s.getSlug);
 
-  // useEffect(() => {
-  //   setDoc(win);
-  // }, [win]);
+  useEffect(() => {
+    setDoc(win);
+  }, [win]);
 
   // useEffect(() => {
   //   getDoc({ _id: winID }).then(async (doc) => {
@@ -251,27 +250,28 @@ export function ModueWindow({ children, win }) {
   let onSave = async (rect) => {
     await save({ doc: rect });
     // setDoc(rect);
-    window.dispatchEvent(
-      new CustomEvent("reload-all-module-winbox", { detail: {} })
-    );
+
+    // window.dispatchEvent(
+    //   new CustomEvent("reload-all-module-winbox", { detail: {} })
+    // );
   };
 
-  // useEffect(() => {
-  //   let layout = async () => {
-  //     let doc = await getDoc({ _id: winID });
-  //     setDoc({ ...doc });
-  //   };
-  //   window.addEventListener("reload-all-module-winbox", layout);
-  //   return () => {
-  //     window.removeEventListener("reload-all-module-winbox", layout);
-  //   };
-  // }, [winID]);
+  useEffect(() => {
+    let layout = async () => {
+      let doc = await getDoc({ _id: win._id });
+      setDoc({ ...doc });
+    };
+    window.addEventListener("reload-all-module-winbox", layout);
+    return () => {
+      window.removeEventListener("reload-all-module-winbox", layout);
+    };
+  }, [win._id]);
 
   return (
-    win &&
-    !win.hidden && (
+    doc &&
+    !doc.hidden && (
       <WindowTemplate
-        initVal={win}
+        initVal={doc}
         toolBarClassName={"bg-green-400"}
         showToolBtn={true}
         onChange={onSave}

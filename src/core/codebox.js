@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import slugify from "slugify";
 const _ = window.require("lodash");
-const smalltalk = require("smalltalk");
+const smalltalk = require("../ui/smalltalk/smalltalk");
 let path = window.require("path");
 export const getID = () => `_${(Math.random() * 100000000).toFixed(0)}`;
 let fs = window.require("fs-extra");
@@ -42,9 +42,7 @@ export const useBoxes = ({ db, root }) => {
   const updateBox = async ({ box }) => {
     db.get("boxes")
       .find((e) => e._id === box._id)
-      .assign({
-        ...box,
-      })
+      .assign(box)
       .write();
 
     window.dispatchEvent(new Event("try-save-state"));
@@ -82,6 +80,7 @@ export const useBoxes = ({ db, root }) => {
       moduleName,
       fileName,
       slug,
+      userData: [],
       inputs: [
         {
           _id: getID(),

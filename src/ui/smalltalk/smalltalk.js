@@ -16,7 +16,7 @@ const BUTTON_OK_CANCEL = {
   cancel: "Cancel",
 };
 
-const zIndex = store(60000);
+// const zIndex = store(1000000);
 
 exports.alert = (title, msg, options) => {
   const buttons = getButtons(options) || BUTTON_OK;
@@ -143,7 +143,7 @@ function showDialog(title, msg, value, buttons, options) {
   const dialog = createElement("div", {
     innerHTML,
     className: "smalltalk",
-    style: `z-index: ${zIndex(zIndex() + 1)}`,
+    style: `z-index: ${1000000000}`,
   });
 
   for (const el of find(dialog, ["ok", "input"])) el.focus();

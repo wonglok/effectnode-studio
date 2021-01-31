@@ -3,7 +3,225 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ProjectContext } from "../pages/Project";
 import smalltalk from "./smalltalk/smalltalk";
 import { getID } from "../core/codebox";
-export function IOEdit({ boxID, win }) {
+
+function ColorPicker({ data, send }) {
+  const [color, setColor] = useState(data.color || "#ffffff");
+  const [name, setName] = useState(data.name);
+  return (
+    <div className={"flex"}>
+      <input
+        type="text"
+        value={name}
+        className="border-b mr-3"
+        onChange={(ev) => {
+          data.name = ev.target.value;
+          setName(data.name);
+          send();
+        }}
+      />
+      <input
+        type="text"
+        value={color}
+        onChange={(ev) => {
+          data.color = ev.target.value;
+          setColor(ev.target.value);
+          send();
+        }}
+      />
+      <input
+        type="color"
+        value={color}
+        onChange={(ev) => {
+          data.color = ev.target.value;
+          setColor(ev.target.value);
+          send();
+        }}
+      />
+    </div>
+  );
+}
+
+function NumberInput({ data, send }) {
+  const [number, setValue] = useState(data.number || 0);
+  const [name, setName] = useState(data.name);
+
+  return (
+    <div className={"flex"}>
+      <input
+        type="text"
+        value={name}
+        className="border-b mr-3"
+        onChange={(ev) => {
+          data.name = ev.target.value;
+          setName(data.name);
+          send();
+        }}
+      />
+
+      <input
+        style={{ width: "50px" }}
+        type="text"
+        value={number}
+        onChange={(ev) => {
+          data.number = parseFloat(ev.target.value);
+          setValue(parseFloat(ev.target.value));
+          send();
+        }}
+      ></input>
+
+      <input
+        min="-100"
+        max="100"
+        step="0.1"
+        type="range"
+        value={number}
+        onChange={(ev) => {
+          data.number = parseFloat(ev.target.value);
+          setValue(parseFloat(ev.target.value));
+          send();
+        }}
+      />
+    </div>
+  );
+}
+
+function InputPicker({ data, send, refresh }) {
+  return (
+    <div>
+      <div className={"m-2"}>Choose a Input Type</div>
+      <button
+        onClick={() => {
+          data.type = "color";
+          send();
+          refresh();
+        }}
+        className={"block m-2 underline"}
+      >
+        Color
+      </button>
+      <button
+        onClick={() => {
+          data.type = "number";
+          send();
+          refresh();
+        }}
+        className={"block m-2 underline"}
+      >
+        Number
+      </button>
+    </div>
+  );
+}
+
+function GeneralPicker({ data, send }) {
+  const [, refreshFnc] = useState(0);
+  let refresh = () => refreshFnc((s) => s + 1);
+
+  return (
+    <div class="flex">
+      {data.type === "color" && (
+        <ColorPicker refresh={refresh} data={data} send={send}></ColorPicker>
+      )}
+      {data.type === "number" && (
+        <NumberInput refresh={refresh} data={data} send={send}></NumberInput>
+      )}
+      {data.type === "ready" && (
+        <InputPicker refresh={refresh} data={data} send={send}></InputPicker>
+      )}
+    </div>
+  );
+}
+
+function UserData({ box, win }) {
+  const { boxesUtil, lowdb } = useContext(ProjectContext);
+  const [, refresh] = useState(0);
+
+  useEffect(() => {
+    box.userData = box.userData.filter((e) => {
+      return e;
+    });
+    boxesUtil.updateBox({ box });
+  }, [box.userData.filter((e) => !e).length]);
+
+  let userData = box.userData;
+
+  let send = () => {
+    window.dispatchEvent(new CustomEvent("stream-state-to-webview"));
+    window.dispatchEvent(new CustomEvent("try-save-state"));
+  };
+
+  let onAdd = async () => {
+    box.userData.push({
+      _id: getID(),
+      name: "ui" + (box.userData.length + 1),
+      type: "ready",
+    });
+    boxesUtil.updateBox({ box });
+    refresh((s) => s + 1);
+  };
+
+  let onRemove = async ({ idx }) => {
+    box.userData.splice(idx, 1);
+    boxesUtil.updateBox({ box });
+    refresh((s) => s + 1);
+  };
+
+  let Pickers = () => {
+    return userData
+      .filter((e) => {
+        return e;
+      })
+      .map((u, idx, array) => {
+        return (
+          <tr key={u._id}>
+            <td className={"p-2 px-8  border-b border"}>
+              <div>
+                <GeneralPicker data={u} send={send}></GeneralPicker>
+              </div>
+            </td>
+            <td
+              className={
+                "p-2 px-3 border-b border bg-indigo-400 text-white cursor-pointer select-none"
+              }
+              onClick={() => {
+                onRemove({ idx, array });
+              }}
+            >
+              Remove
+            </td>
+          </tr>
+
+          // <div>
+          // </div>
+        );
+      });
+  };
+  return (
+    <div>
+      <table className={"rounded-2xl shadow-2xl overflow-hidden"}>
+        <thead></thead>
+        <tbody>
+          <tr>
+            <td
+              onClick={() => {
+                onAdd();
+              }}
+              colSpan={2}
+              className={
+                " rounded-t-2xl py-2 text-center bg-blue-500 text-white cursor-pointer select-none px-6"
+              }
+            >
+              Add User Data
+            </td>
+          </tr>
+          {Pickers()}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function IOTable({ boxID, win, children }) {
   const { boxesUtil, lowdb } = useContext(ProjectContext);
   const [, refresh] = useState(0);
 
@@ -124,6 +342,9 @@ export function IOEdit({ boxID, win }) {
       {box && (
         <div>
           <h1 className={"mb-3 text-xl"}>Box: {box.displayName}</h1>
+          <div className={"mb-4"}>
+            <UserData box={box}></UserData>
+          </div>
           <div className={" "}>
             <table className={"rounded-2xl shadow-2xl"}>
               <thead></thead>
@@ -138,7 +359,7 @@ export function IOEdit({ boxID, win }) {
                       " rounded-t-2xl py-2 text-center bg-blue-500 text-white cursor-pointer select-none"
                     }
                   >
-                    Add Input
+                    Add Connector
                   </td>
                 </tr>
 
@@ -183,6 +404,14 @@ export function IOEdit({ boxID, win }) {
 
       {/* <pre>{JSON.stringify(box.inputs, null, 4)}</pre>
       <div>{box.displayName}</div> */}
+    </div>
+  );
+}
+
+export function IOEdit({ boxID, win }) {
+  return (
+    <div className={"h-full w-full overflow-y-scroll"}>
+      <IOTable boxID={boxID} win={win}></IOTable>
     </div>
   );
 }

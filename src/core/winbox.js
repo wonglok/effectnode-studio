@@ -4,7 +4,8 @@ import create from "zustand";
 // import produce, { createDraft, finishDraft } from "immer"
 
 let getID = () => `_${(Math.random() * 100000000).toFixed(0)}`;
-const smalltalk = require("smalltalk");
+
+const smalltalk = require("../ui/smalltalk/smalltalk");
 
 export const makeUseWinBoxStore = (groupID) =>
   create((set, get) => {
@@ -42,8 +43,8 @@ export const makeUseWinBoxStore = (groupID) =>
           name,
           x: 0,
           y: 0,
-          w: 300,
-          h: 300,
+          w: 400,
+          h: 515,
           ...pos,
           zIndex: 0,
           hidden: false,
@@ -61,8 +62,8 @@ export const makeUseWinBoxStore = (groupID) =>
           name,
           x: 0,
           y: 0,
-          w: 300,
-          h: 300,
+          w: 323,
+          h: 515,
           ...pos,
           hidden: false,
         };

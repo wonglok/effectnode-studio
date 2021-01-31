@@ -100,6 +100,7 @@ export function PreviewBox() {
             }
           }
         }
+
         let div = document.createElement("div");
         div.innerHTML = `<div
           class="MY_LOG p-1 mt-1 text-sm border bg-yellow-200 whitespace-pre mb-4"
