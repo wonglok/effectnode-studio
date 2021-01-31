@@ -135,7 +135,7 @@ function GeneralPicker({ data, send }) {
 }
 
 function UserData({ box, win }) {
-  const { boxesUtil, lowdb } = useContext(ProjectContext);
+  const { boxesUtil } = useContext(ProjectContext);
   const [, refresh] = useState(0);
 
   useEffect(() => {
