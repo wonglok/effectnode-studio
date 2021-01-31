@@ -22,6 +22,7 @@ export const useBoxes = ({ db, root }) => {
       JSON.stringify(json, null, "\t"),
       "utf-8"
     );
+    window.dispatchEvent(new CustomEvent("try-bundle"));
   };
 
   useEffect(() => {
@@ -29,13 +30,18 @@ export const useBoxes = ({ db, root }) => {
       () => {
         saveInstant(db.getState());
       },
-      1000,
+      1500,
       { leading: true, trailing: true }
     );
 
+    let saveNow = () => {
+      saveInstant(db.getState());
+    };
     window.addEventListener("try-save-state", saver);
+    window.addEventListener("save-state-now", saveNow);
     return () => {
       window.removeEventListener("try-save-state", saver);
+      window.removeEventListener("save-state-now", saveNow);
     };
   });
 

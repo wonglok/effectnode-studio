@@ -19,6 +19,7 @@ function ColorPicker({ data, send }) {
           send();
         }}
       />
+
       <input
         type="text"
         value={color}
@@ -28,6 +29,7 @@ function ColorPicker({ data, send }) {
           send();
         }}
       />
+
       <input
         type="color"
         value={color}
@@ -118,7 +120,7 @@ function GeneralPicker({ data, send }) {
   let refresh = () => refreshFnc((s) => s + 1);
 
   return (
-    <div class="flex">
+    <div className="flex">
       {data.type === "color" && (
         <ColorPicker refresh={refresh} data={data} send={send}></ColorPicker>
       )}
@@ -146,8 +148,10 @@ function UserData({ box, win }) {
   let userData = box.userData;
 
   let send = () => {
-    window.dispatchEvent(new CustomEvent("stream-state-to-webview"));
-    window.dispatchEvent(new CustomEvent("try-save-state"));
+    boxesUtil.updateBox({ box });
+    // window.dispatchEvent(new CustomEvent("save-state-now"));
+    // window.dispatchEvent(new CustomEvent("try-save-state"));
+    // window.dispatchEvent(new CustomEvent("stream-state-to-webview"));
   };
 
   let onAdd = async () => {

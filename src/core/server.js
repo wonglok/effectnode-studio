@@ -105,6 +105,10 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
     const bundle = await bundler.bundle();
     console.log(bundle);
 
+    window.addEventListener("try-bundle", () => {
+      bundler.bundle();
+    });
+
     onReady({
       port,
       pack: async () => {
