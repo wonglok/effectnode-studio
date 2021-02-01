@@ -55,7 +55,14 @@ export const useBoxes = ({ db, root }) => {
     window.dispatchEvent(new Event("stream-state-to-webview"));
   };
 
-  const renameBox = async ({ box }) => {};
+  const renameBox = async ({ box }) => {
+    let displayName = await smalltalk.prompt(
+      "Please enter a new name for your box.",
+      "Example: mybox"
+    );
+    box.displayName = displayName;
+    updateBox({ box });
+  };
 
   const sepToken = `__ID__`;
 

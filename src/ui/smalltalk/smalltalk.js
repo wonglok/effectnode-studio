@@ -301,4 +301,4 @@ function remove(dialog) {
   if (parentElement) parentElement.removeChild(dialog);
 }
 
-export default mod;
+module.exports = mod;

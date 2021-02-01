@@ -15,6 +15,19 @@ const INPUT_SEPERATOR = `_Input_`;
 const OUTPUT_SEPERATOR = `_Output_`;
 const CONNECTOR_RADIUS = 6.5;
 
+function useWindowEvent(event, fnc) {
+  useEffect(() => {
+    window.addEventListener(event, fnc);
+    return () => {
+      window.removeEventListener(event, fnc);
+    };
+  });
+}
+
+function emitWindowEvent(event, detail) {
+  window.dispatchEvent(new CustomEvent(event, { detail }));
+}
+
 function getSizing({ box }) {
   let fontSize = 14;
   let paddingX = 10;
@@ -102,6 +115,22 @@ export function Box({
       .catch(console.log);
   };
 
+  const onClickRename = async () => {
+    boxesUtil.renameBox({ box }).catch((e) => {
+      console.log(e);
+    });
+
+    // smalltalk
+    //   .confirm("Remove Box?", `"${box.displayName}"`)
+    //   .then(() => {
+    //     return boxesUtil.removeBox({ box });
+    //   })
+    //   .then(() => {
+    //     graphRefresh((s) => s + 1);
+    //   })
+    //   .catch(console.log);
+  };
+
   let hasOutputCable = () => {
     let cables = state.cables;
     if (!cables) {
@@ -144,6 +173,10 @@ export function Box({
     });
   };
 
+  let [hover, setHover] = useState(false);
+  useWindowEvent("hover-on-svg-area-rect", () => {
+    setHover(false);
+  });
   let {
     paddingX,
     // paddingY,
@@ -154,29 +187,116 @@ export function Box({
     boxWidth,
     displayName,
   } = getSizing({ box });
+
   return (
     <g transform={`translate(${drag.x}, ${drag.y})`}>
-      <defs>
-        <linearGradient id="logo-gradient" x1="0%" y1="50%" x2="100%" y2="50%">
-          <stop offset="0%" stopColor="#7A5FFF">
-            <animate
-              attributeName="stop-color"
-              values="#7A5FFF; #01FF89; #7A5FFF"
-              dur="4s"
-              repeatCount="indefinite"
-            ></animate>
-          </stop>
+      {/* leave box */}
+      {/* <rect
+        x={-15 - 8}
+        y={-35 - 8}
+        width={100 + boxWidth + 8 + 8}
+        height={155 + 8 + 8}
+        rx={8}
+        ry={8}
+        fill={hover ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.0)"}
+        onMouseEnter={() => {
+          setHover(false);
+        }}
+        onMouseLeave={() => {
+          setHover(false);
+        }}
+        onMouseOver={() => {
+          setHover(false);
+        }}
+        onMouseOut={() => {
+          setHover(false);
+        }}
+      ></rect> */}
 
-          <stop offset="100%" stopColor="#01FF89">
-            <animate
-              attributeName="stop-color"
-              values="#01FF89; #7A5FFF; #01FF89"
-              dur="4s"
-              repeatCount="indefinite"
-            ></animate>
-          </stop>
-        </linearGradient>
-      </defs>
+      {/* hover box */}
+      <rect
+        {...bind()}
+        x={-15}
+        y={-35}
+        width={90 + boxWidth}
+        height={155}
+        rx={8}
+        ry={8}
+        fill={hover ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.0)"}
+        style={{ cursor: "move" }}
+        onMouseEnter={() => {
+          setHover(true);
+        }}
+        // onMouseLeave={() => {
+        //   setHover(false);
+        // }}
+        onMouseOver={() => {
+          setHover(true);
+        }}
+        // onMouseOut={() => {
+        //   setHover(false);
+        // }}
+      ></rect>
+
+      <text
+        className="select-none"
+        fill={"#ececec"}
+        x={boxWidth + paddingX}
+        y={-fontSize * 0.5}
+        fontSize={fontSize + "px"}
+      >
+        {displayName}
+      </text>
+
+      {hover && (
+        <g>
+          <text
+            onClick={onClickEditCode}
+            className="select-none underline cursor-pointer"
+            fill={"#ececec"}
+            x={boxWidth + paddingX}
+            y={fontSize + 1 + 3}
+            fontSize={fontSize + "px"}
+          >
+            Edit Code
+          </text>
+
+          <text
+            onClick={onClickEditIO}
+            className="select-none underline cursor-pointer"
+            fill={"#ececec"}
+            x={boxWidth + paddingX}
+            y={fontSize + 1 + fontSize + 1 + 10}
+            fontSize={fontSize + "px"}
+          >
+            Edit I/O
+          </text>
+
+          <text
+            onClick={onClickRename}
+            className="select-none underline cursor-pointer"
+            fill={"#ececec"}
+            x={boxWidth + paddingX}
+            y={fontSize + 1 + fontSize + 1 + 35}
+            fontSize={fontSize + "px"}
+          >
+            Rename
+          </text>
+
+          {!box.isProtected && (
+            <text
+              onClick={onClickRemoveLabel}
+              className="select-none underline cursor-pointer"
+              fill={"#ffecec"}
+              x={boxWidth + paddingX}
+              y={fontSize + 1 + fontSize * 2 + 1 + 45}
+              fontSize={fontSize + "px"}
+            >
+              Delete
+            </text>
+          )}
+        </g>
+      )}
 
       <rect
         onClick={() => onClickBox({ box })}
@@ -189,52 +309,6 @@ export function Box({
         rx={8}
         ry={8}
       ></rect>
-
-      <text
-        className="select-none cursor-move"
-        fill={"#ececec"}
-        {...bind()}
-        x={boxWidth + paddingX}
-        y={-fontSize * 0.5}
-        fontSize={fontSize + "px"}
-      >
-        {displayName}
-      </text>
-
-      <text
-        onClick={onClickEditCode}
-        className="select-none underline cursor-pointer"
-        fill={"#ececec"}
-        x={boxWidth + paddingX}
-        y={fontSize + 1 + 3}
-        fontSize={fontSize + "px"}
-      >
-        Edit Code
-      </text>
-
-      <text
-        onClick={onClickEditIO}
-        className="select-none underline cursor-pointer"
-        fill={"#ececec"}
-        x={boxWidth + paddingX}
-        y={fontSize + 1 + fontSize + 1 + 10}
-        fontSize={fontSize + "px"}
-      >
-        Edit I/O
-      </text>
-
-      {!box.isProtected && (
-        <text
-          onClick={onClickRemoveLabel}
-          className="select-none underline cursor-pointer"
-          fill={"#ffecec"}
-          x={boxWidth + paddingX}
-          y={fontSize + 1 + fontSize + 1 + 35}
-          fontSize={fontSize + "px"}
-        >
-          Remove
-        </text>
-      )}
 
       {/* Input, Green */}
       {InputBalls()}
@@ -753,7 +827,7 @@ export function SVGEditor({ rect, state }) {
   };
 
   const addModule = async () => {
-    await boxesUtil.addBox();
+    await boxesUtil.addBox().catch(console.log);
     refresh((s) => s + rID + 1);
     // addBox();
     // console.log(lowdb.get("boxes").value());
@@ -837,6 +911,28 @@ export function SVGEditor({ rect, state }) {
       height={rect.height}
       viewBox={`${pan.x} ${pan.y} ${rect.width * zoom} ${rect.height * zoom}`}
     >
+      <defs>
+        <linearGradient id="logo-gradient" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#7A5FFF">
+            <animate
+              attributeName="stop-color"
+              values="#7A5FFF; #01FF89; #7A5FFF"
+              dur="4s"
+              repeatCount="indefinite"
+            ></animate>
+          </stop>
+
+          <stop offset="100%" stopColor="#01FF89">
+            <animate
+              attributeName="stop-color"
+              values="#01FF89; #7A5FFF; #01FF89"
+              dur="4s"
+              repeatCount="indefinite"
+            ></animate>
+          </stop>
+        </linearGradient>
+      </defs>
+
       <rect
         onClick={async (ev) => {
           if (hand) {
@@ -845,6 +941,9 @@ export function SVGEditor({ rect, state }) {
             });
           } else {
           }
+        }}
+        onMouseEnter={() => {
+          emitWindowEvent("hover-on-svg-area-rect", true);
         }}
         x={pan.x}
         y={pan.y}

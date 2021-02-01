@@ -306,6 +306,8 @@ function ModulesSet() {
         if (doc) {
           console.log(doc);
           // setDoc(doc);
+
+          doc.hidden = false;
           doc.zIndex = getZMax({ wins: modWindows }) + 50;
           await winUtils.save({ doc });
 
@@ -319,6 +321,7 @@ function ModulesSet() {
           doc.zIndex = getZMax({ wins: modWindows }) + 50;
           doc.x = 20;
           doc.y = 20;
+          doc.hidden = false;
           await winUtils.save({ doc });
 
           window.dispatchEvent(
@@ -332,7 +335,7 @@ function ModulesSet() {
     return () => {
       window.removeEventListener("provide-module-edit-window", addWin);
     };
-  });
+  }, []);
 
   useEffect(() => {
     let reloadModWins = () => {
