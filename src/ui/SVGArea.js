@@ -13,7 +13,7 @@ import smalltalk from "./smalltalk/smalltalk";
 const BOX_SEPERATOR = `BOX_`;
 const INPUT_SEPERATOR = `_Input_`;
 const OUTPUT_SEPERATOR = `_Output_`;
-const CONNECTOR_RADIUS = 6.5;
+const CONNECTOR_RADIUS = 8;
 
 function useWindowEvent(event, fnc) {
   useEffect(() => {
@@ -68,6 +68,10 @@ export function Box({
     boxesUtil.updateBox({ box });
     refresh((s) => s + rID + 1);
   };
+
+  useWindowEvent("state-flushed-to-disk", () => {
+    refresh((s) => s + rID + 1);
+  });
 
   const [drag, setDrag] = useState({ x: box.x, y: box.y });
   const bind = useDrag(({ down, delta: [dx, dy] }) => {
@@ -167,7 +171,7 @@ export function Box({
           cx={CONNECTOR_RADIUS * 1.5 + (CONNECTOR_RADIUS + gap) * 2.0 * index}
           cy={-CONNECTOR_RADIUS * 1.5 - 3}
           fill={isConnected ? "#77ff77" : "#ddffdd"}
-          stroke={isConnected ? "#77ff77" : "#ddffdd"}
+          // stroke={isConnected ? "#77ff77" : "#ddffdd"}
         ></circle>
       );
     });

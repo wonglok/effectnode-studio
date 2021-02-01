@@ -23,6 +23,7 @@ export const useBoxes = ({ db, root }) => {
       "utf-8"
     );
     window.dispatchEvent(new CustomEvent("try-bundle"));
+    window.dispatchEvent(new CustomEvent("state-flushed-to-disk"));
   };
 
   useEffect(() => {

@@ -297,7 +297,6 @@ export function ModueWindow({ children, win }) {
 function ModulesSet() {
   let { useWinBox } = useContext(ProjectContext);
   let winUtils = useWinBox((s) => s);
-
   let [modWindows, setModWindows] = useState([]);
 
   useEffect(() => {
@@ -308,7 +307,7 @@ function ModulesSet() {
           // setDoc(doc);
 
           doc.hidden = false;
-          doc.zIndex = getZMax({ wins: modWindows }) + 50;
+          doc.zIndex = getZMax({ wins: modWindows }) + 150;
           await winUtils.save({ doc });
 
           window.dispatchEvent(
@@ -318,7 +317,7 @@ function ModulesSet() {
           let doc = await winUtils.makeDoc({ name: box.displayName });
           doc._id = box._id;
           doc.type = "ModuleWindow";
-          doc.zIndex = getZMax({ wins: modWindows }) + 50;
+          doc.zIndex = getZMax({ wins: modWindows }) + 150;
           doc.x = 20;
           doc.y = 20;
           doc.hidden = false;
