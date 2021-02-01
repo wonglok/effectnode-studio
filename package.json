@@ -2,7 +2,7 @@
   "name": "effectnode-studio",
   "description": "EffectNode Studio",
   "author": "wonglok",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/wonglok/lok-3d-viewer.git"
