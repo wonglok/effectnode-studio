@@ -202,7 +202,7 @@ function UserData({ box, win }) {
   };
   return (
     <div>
-      <table className={"rounded-2xl shadow-2xl overflow-hidden"}>
+      <table className={"rounded-2xl shadow-2xl overflow-hidden bg-white"}>
         <thead></thead>
         <tbody>
           <tr>
@@ -350,7 +350,7 @@ function IOTable({ boxID, win, children }) {
             <UserData box={box}></UserData>
           </div>
           <div className={" "}>
-            <table className={"rounded-2xl shadow-2xl"}>
+            <table className={"rounded-2xl shadow-2xl bg-white"}>
               <thead></thead>
               <tbody>
                 <tr>

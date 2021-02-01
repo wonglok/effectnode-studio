@@ -21,8 +21,9 @@ const getZMax = ({ wins }) => {
 };
 
 export function WindowTemplate({
+  blur = false,
   children,
-  toolBarClassName = "bg-green-400",
+  toolBarClassName = " ",
   initVal,
   showToolBtn = true,
   onChange = () => {},
@@ -117,10 +118,11 @@ export function WindowTemplate({
     <div
       onMouseDown={onZIndex}
       className={
-        " absolute group top-0 left-0 bg-white text-black overflow-hidden rounded-lg shadow-xl"
+        " absolute group top-0 left-0 text-black overflow-hidden rounded-lg shadow-xl"
       }
       style={{
         zIndex: 10 + (rect.zIndex || 0),
+
         width: `${rect.w}px`,
         height: `${rect.h}px`,
         // borderColor: "#003E42",
@@ -128,9 +130,11 @@ export function WindowTemplate({
       }}
     >
       <div
-        style={{ height: 25 + "px" }}
+        style={{
+          height: 25 + "px",
+        }}
         className={
-          "w-full px-1 text-sm flex justify-between items-center cursor-move " +
+          "w-full px-1 text-sm flex justify-between items-center cursor-move bg-green-500 text-white bg-opacity-90" +
           toolBarClassName
         }
         {...toolbar()}
@@ -153,7 +157,14 @@ export function WindowTemplate({
           </div>
         )}
       </div>
-      <div className="relative" style={{ height: `${rect.h - 25}px` }}>
+      <div
+        className="relative "
+        style={{
+          backdropFilter: blur ? `blur(7px)` : ``,
+          height: `${rect.h - 25}px`,
+          backgroundColor: blur ? `rgba(255,255,255,0.65)` : `rgb(255,255,255)`,
+        }}
+      >
         {children}
       </div>
 
@@ -216,7 +227,7 @@ export function AlwaysHereWindow({ children, name, pos }) {
     doc && (
       <WindowTemplate
         initVal={doc}
-        toolBarClassName={"bg-green-400"}
+        // toolBarClassName={"bg-green-400"}
         showToolBtn={false}
         onChange={onSave}
       >
@@ -272,9 +283,10 @@ export function ModueWindow({ children, win }) {
     !doc.hidden && (
       <WindowTemplate
         initVal={doc}
-        toolBarClassName={"bg-green-400"}
+        // toolBarClassName={"bg-green-400"}
         showToolBtn={true}
         onChange={onSave}
+        blur={true}
       >
         {children}
       </WindowTemplate>

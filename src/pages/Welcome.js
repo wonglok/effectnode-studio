@@ -47,7 +47,7 @@ export const RecentItem = ({ doc, alt }) => {
       );
     } else {
       window.alert("Folder dont have project files");
-      throw new Error(`folder dont have project files`);
+      // throw new Error(`folder dont have project files`);
     }
   };
 
@@ -158,7 +158,7 @@ export function Welcome() {
         if (!cancel) {
           window.alert("Folder dont have project files");
         }
-        throw new Error(`folder dont have project files`);
+        // throw new Error(`folder dont have project files`);
       }
     } catch (e) {
       console.log(e);

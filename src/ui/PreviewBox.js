@@ -112,10 +112,11 @@ export function PreviewBox() {
     };
 
     let resetLogs = () => {
-      let domList = scroller.current.querySelectorAll(".MY_LOG");
-      for (let i = 0; i < domList.length; i++) {
-        domList[i].remove();
-      }
+      scroller.current.innerHTML = "";
+      // let domList = scroller.current.querySelectorAll(".MY_LOG");
+      // for (let i = 0; i < domList.length; i++) {
+      //   // domList[i].remove();
+      // }
     };
 
     window.addEventListener("reload-page", resetLogs);

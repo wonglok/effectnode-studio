@@ -830,7 +830,7 @@ export function SVGEditor({ rect, state }) {
       ref={svg}
       {...bind()}
       style={{
-        backgroundColor: "#444444",
+        backgroundColor: "rgba(0,0,0,0.7)",
         cursor: hand && hand.type === "output" ? "cell" : "",
       }}
       width={rect.width}
