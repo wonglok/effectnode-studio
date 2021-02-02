@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wonglok/lok-3d-viewer.git"
+    "url": "https://github.com/wonglok/effectnode-studio"
   },
   "private": false,
   "dependencies": {
@@ -64,14 +64,7 @@
   },
   "build": {
     "asar": true,
-    "fileAssociations": [
-      {
-        "ext": "glb",
-        "name": "GLB 3D File",
-        "role": "Viewer",
-        "isPackage": false
-      }
-    ],
+    "fileAssociations": [],
     "productName": "EffectNodeApp",
     "appId": "com.wonglok.EffectNodeApp",
     "mac": {

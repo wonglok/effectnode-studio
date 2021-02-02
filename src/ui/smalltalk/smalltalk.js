@@ -17,13 +17,12 @@ const BUTTON_OK_CANCEL = {
 };
 
 // const zIndex = store(1000000);
-let mod = {};
-mod.alert = (title, msg, options) => {
+export const alert = (title, msg, options) => {
   const buttons = getButtons(options) || BUTTON_OK;
   return showDialog(title, msg, "", buttons, options);
 };
 
-mod.prompt = (title, msg, value = "", options) => {
+export const prompt = (title, msg, value = "", options) => {
   const type = getType(options);
   const val = String(value).replace(/"/g, "&quot;");
 
@@ -33,13 +32,13 @@ mod.prompt = (title, msg, value = "", options) => {
   return showDialog(title, msg, valueStr, buttons, options);
 };
 
-mod.confirm = (title, msg, options) => {
+export const confirm = (title, msg, options) => {
   const buttons = getButtons(options) || BUTTON_OK_CANCEL;
 
   return showDialog(title, msg, "", buttons, options);
 };
 
-mod.progress = (title, message, options) => {
+export const progress = (title, message, options) => {
   const valueStr = `
         <progress value="0" data-name="js-progress" class="progress" max="100"></progress>
         <span data-name="js-counter">0%</span>
@@ -301,4 +300,9 @@ function remove(dialog) {
   if (parentElement) parentElement.removeChild(dialog);
 }
 
-module.exports = mod;
+export default {
+  alert,
+  prompt,
+  confirm,
+  progress,
+};
