@@ -5,7 +5,7 @@ import smalltalk from "./smalltalk/smalltalk";
 import { getID } from "../core/codebox";
 
 function ColorPicker({ data, send }) {
-  const [color, setColor] = useState(data.color || "#ffffff");
+  const [color, setColor] = useState(data.value || "#ffffff");
   const [name, setName] = useState(data.name);
   return (
     <div className={"flex"}>
@@ -24,7 +24,7 @@ function ColorPicker({ data, send }) {
         type="text"
         value={color}
         onChange={(ev) => {
-          data.color = ev.target.value;
+          data.value = ev.target.value;
           setColor(ev.target.value);
           send();
         }}
@@ -34,7 +34,7 @@ function ColorPicker({ data, send }) {
         type="color"
         value={color}
         onChange={(ev) => {
-          data.color = ev.target.value;
+          data.value = ev.target.value;
           setColor(ev.target.value);
           send();
         }}
@@ -44,7 +44,7 @@ function ColorPicker({ data, send }) {
 }
 
 function NumberInput({ data, send }) {
-  const [number, setValue] = useState(data.number || 0);
+  const [number, setValue] = useState(data.value || 0);
   const [name, setName] = useState(data.name);
 
   return (
@@ -65,7 +65,7 @@ function NumberInput({ data, send }) {
         type="text"
         value={number}
         onChange={(ev) => {
-          data.number = parseFloat(ev.target.value);
+          data.value = parseFloat(ev.target.value);
           setValue(parseFloat(ev.target.value));
           send();
         }}
@@ -78,7 +78,7 @@ function NumberInput({ data, send }) {
         type="range"
         value={number}
         onChange={(ev) => {
-          data.number = parseFloat(ev.target.value);
+          data.value = parseFloat(ev.target.value);
           setValue(parseFloat(ev.target.value));
           send();
         }}

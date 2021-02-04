@@ -136,6 +136,8 @@ export async function runServer({ projectRoot, onReady = () => {} }) {
 
     app.use(express.static(path.join(projectRoot, "./prod/")));
 
+    app.use(bundler.middleware());
+
     server = app.listen(port, () => {
       console.log("http://localhost:" + port + "/?r=" + Math.random());
     });

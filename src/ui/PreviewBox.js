@@ -7,36 +7,6 @@ export function PreviewBox() {
   const webview = useRef();
   const { server, lowdb } = useContext(ProjectContext);
 
-  // useEffect(() => {
-  //   let logger = (e) => {
-  //     console.log(`[GUEST]`, e.message);
-  //   };
-  //   webview.current.addEventListener("console-message", logger);
-  //   return () => {
-  //     webview.current.removeEventListener("console-message", logger);
-  //   };
-  // }, []);
-
-  /*
-  // displayName
-  server = {
-      port,
-      pack: async () => {
-        await bundler.bundle();
-      },
-      onDonePack: (donePack) => {
-        window.addEventListener("done-packing", () => {
-          donePack({ port });
-        });
-        return () => {
-          window.removeEventListener("done-packing", () => {
-            donePack({ port });
-          });
-        };
-      },
-    }
-  */
-
   useEffect(() => {
     let clean = () => {};
 
@@ -44,12 +14,12 @@ export function PreviewBox() {
       if (webview.current) {
         try {
           webview.current.executeJavaScript(`
-          if (window.StreamInput) {
-            window.StreamInput(${JSON.stringify(lowdb.getState())});
-          } else {
-            console.log('window.StreamInput not found');
-          }
-        `);
+            if (window.StreamInput) {
+              window.StreamInput(${JSON.stringify(lowdb.getState())});
+            } else {
+              console.log('window.StreamInput not found');
+            }
+          `);
         } catch (e) {
           console.log(e);
         }
@@ -101,10 +71,37 @@ export function PreviewBox() {
           }
         }
 
+        let data = { type: "log", args: [] };
+        try {
+          let temp = JSON.parse(e.data);
+          if (temp.type) {
+            data.type = temp.type;
+          }
+          if (temp.args) {
+            data.args = temp.args;
+          }
+        } catch (e) {
+          console.log(e);
+        }
+
+        let getColor = (type = "log") => {
+          if (type === "log") {
+            return " bg-yellow-200";
+          } else if (type === "error") {
+            return " bg-red-200";
+          } else {
+            return " bg-yellow-200";
+          }
+        };
+
+        let logMsg = data.args.join(", ");
+
         let div = document.createElement("div");
         div.innerHTML = `<div
-          class="MY_LOG p-1 mt-1 text-sm border bg-yellow-200 whitespace-pre mb-4"
-        >${e.message}</div>`;
+          class="MY_LOG p-1 mt-1 text-sm border whitespace-pre mb-4 ${getColor(
+            data.type
+          )}"
+        >${logMsg}</div>`;
         scroller.current.appendChild(div);
 
         scroller.current.scrollTop = scroller.current.scrollHeight;
@@ -120,16 +117,19 @@ export function PreviewBox() {
     };
 
     window.addEventListener("reload-page", resetLogs);
-    webview.current.addEventListener("console-message", logger);
+    window.addEventListener("message", logger, false);
     return () => {
       window.removeEventListener("reload-page", resetLogs);
-      webview.current.removeEventListener("console-message", logger);
+      window.removeEventListener("message", logger, false);
     };
   }, []);
 
   return (
     <div className="h-full w-full">
-      <webview ref={webview} style={{ height: "calc(100% - 250px)" }}></webview>
+      <iframe
+        ref={webview}
+        style={{ height: "calc(100% - 250px)", width: "100%" }}
+      ></iframe>
       <div
         className={"w-full overflow-scroll"}
         ref={scroller}
