@@ -1083,10 +1083,10 @@ export function SVGArea() {
   }, []);
 
   return (
-    <div ref={ref} className={"w-full h-full"}>
-      {/* {JSON.stringify(lowdb.getState())} */}
+    <div ref={ref} className={"w-full h-full relative"}>
       {rect && <SVGEditor rect={rect} state={lowdb.getState()}></SVGEditor>}
       <LogBox></LogBox>
+      {/* {JSON.stringify(lowdb.getState())} */}
     </div>
   );
 }
@@ -1107,19 +1107,19 @@ function LogBox() {
 
         let getColor = (type = "log") => {
           if (type === "log") {
-            return "border border-yellow-200";
+            return "text-yellow-200";
           } else if (type === "info") {
-            return "border border-blue-200";
+            return "text-blue-200";
           } else if (type === "error") {
-            return "border border-red-200";
+            return "text-red-200";
           } else {
-            return "border border-yellow-200";
+            return "text-yellow-200";
           }
         };
 
         let div = document.createElement("div");
         div.innerHTML = `<div
-          class="MY_LOG p-1 mt-1 text-sm border whitespace-pre mb-4 ${getColor(
+          class="MY_LOG p-1 text-sm whitespace-pre text-right ${getColor(
             detail.type
           )}"
         >${detail.msg}</div>`;
@@ -1143,9 +1143,9 @@ function LogBox() {
 
   return (
     <div
-      className={"w-full absolute right-0 overflow-scroll "}
+      className={"w-full absolute right-0 overflow-scroll pr-3"}
       ref={scroller}
-      style={{ height: `250px`, width: "500px", bottom: "50px" }}
+      style={{ height: `250px`, width: "400px", bottom: "50px" }}
     ></div>
   );
 }
