@@ -1,5 +1,5 @@
 # Effect Node Studio
 
-Video Demo: https://vimeo.com/506670179
+Video Demo: https://vimeo.com/509300655
 
-[![Effect Node Studio](https://user-images.githubusercontent.com/4082826/106376332-4ca20a00-63cf-11eb-92d5-8159f21384f9.png)](https://vimeo.com/506670179)
+[![Effect Node Studio](https://raw.githubusercontent.com/wonglok/effectnode-studio/main/docs/effectnode-v0.0.1.png)](https://vimeo.com/509300655)
