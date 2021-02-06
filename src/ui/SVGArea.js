@@ -903,12 +903,17 @@ export function SVGEditor({ rect, state }) {
     window.location.reload();
   };
 
+  let openWebPage = () => {
+    let { shell } = window.require("electron");
+    shell.openExternal("http://localhost:1234");
+  };
+
   return (
     <svg
       ref={svg}
       {...bind()}
       style={{
-        backgroundColor: "rgba(0,0,0,0.7)",
+        // backgroundColor: "rgba(0,0,0,0.5)",
         cursor: hand && hand.type === "output" ? "cell" : "",
       }}
       width={rect.width}
@@ -1023,6 +1028,17 @@ export function SVGEditor({ rect, state }) {
         >
           Reload System
         </text>
+
+        <text
+          x={380 + 100 + pan.x}
+          y={10 + 17 + pan.y}
+          onClick={openWebPage}
+          fontSize="17"
+          fill="white"
+          className="underline cursor-pointer"
+        >
+          Open WebPage
+        </text>
       </g>
 
       {/* <SlotLine></SlotLine> */}
@@ -1070,6 +1086,66 @@ export function SVGArea() {
     <div ref={ref} className={"w-full h-full"}>
       {/* {JSON.stringify(lowdb.getState())} */}
       {rect && <SVGEditor rect={rect} state={lowdb.getState()}></SVGEditor>}
+      <LogBox></LogBox>
     </div>
+  );
+}
+
+function LogBox() {
+  let scroller = useRef();
+  useEffect(() => {
+    let logger = ({ detail }) => {
+      if (scroller.current) {
+        let domList = scroller.current.querySelectorAll(".MY_LOG");
+        if (domList.length >= 100) {
+          for (let i = 0; i < domList.length; i++) {
+            if (i < domList.length - 100) {
+              domList[i].remove();
+            }
+          }
+        }
+
+        let getColor = (type = "log") => {
+          if (type === "log") {
+            return "border border-yellow-200";
+          } else if (type === "info") {
+            return "border border-blue-200";
+          } else if (type === "error") {
+            return "border border-red-200";
+          } else {
+            return "border border-yellow-200";
+          }
+        };
+
+        let div = document.createElement("div");
+        div.innerHTML = `<div
+          class="MY_LOG p-1 mt-1 text-sm border whitespace-pre mb-4 ${getColor(
+            detail.type
+          )}"
+        >${detail.msg}</div>`;
+        scroller.current.appendChild(div);
+
+        scroller.current.scrollTop = scroller.current.scrollHeight;
+      }
+    };
+
+    let resetLogs = () => {
+      scroller.current.innerHTML = "";
+    };
+
+    resetLogs();
+
+    window.addEventListener("log", logger);
+    return () => {
+      window.removeEventListener("log", logger);
+    };
+  }, [scroller]);
+
+  return (
+    <div
+      className={"w-full absolute right-0 overflow-scroll "}
+      ref={scroller}
+      style={{ height: `250px`, width: "500px", bottom: "50px" }}
+    ></div>
   );
 }

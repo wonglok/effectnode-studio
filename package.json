@@ -38,6 +38,7 @@
     "react95": "^3.5.0",
     "slugify": "^1.4.6",
     "smalltalk": "^4.0.7",
+    "socket.io": "^3.1.1",
     "styled-components": "^5.2.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
     "three": "^0.124.0",

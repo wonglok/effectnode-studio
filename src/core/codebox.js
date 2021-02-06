@@ -31,8 +31,8 @@ export const useBoxes = ({ db, root }) => {
       () => {
         saveInstant(db.getState());
       },
-      1500,
-      { leading: true, trailing: true }
+      2500,
+      { leading: true, trailing: false }
     );
 
     let saveNow = () => {

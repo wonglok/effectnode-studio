@@ -5,7 +5,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { useDrag, useMove } from "react-use-gesture";
 import { ProjectContext } from "../pages/Project.js";
 import { IOEdit } from "./IOEdit.js";
-import { PreviewBox } from "./PreviewBox.js";
+// import { PreviewBox } from "./PreviewBox.js";
 import { SVGArea } from "./SVGArea.js";
 
 const getZMax = ({ wins }) => {
@@ -242,6 +242,7 @@ export function ModueWindow({ children, win }) {
   let getDoc = useWinBox((s) => s.getDoc);
   let save = useWinBox((s) => s.save);
   let [doc, setDoc] = useState(win);
+
   // let getSlug = useWinBox((s) => s.getSlug);
 
   useEffect(() => {
@@ -382,7 +383,9 @@ function ModulesSet() {
 export function WindowBox({ children }) {
   return (
     <div className={"relative h-full"}>
-      <AlwaysHereWindow
+      <SVGArea></SVGArea>
+
+      {/* <AlwaysHereWindow
         name="Main Editor"
         pos={{
           x: 10,
@@ -390,21 +393,19 @@ export function WindowBox({ children }) {
           w: window.innerWidth * 0.45,
           h: window.innerHeight * 0.7,
         }}
-      >
-        <SVGArea></SVGArea>
-      </AlwaysHereWindow>
+      ></AlwaysHereWindow> */}
 
-      <AlwaysHereWindow
+      {/* <AlwaysHereWindow
         name="Preview Box"
         pos={{
           w: window.innerWidth * 0.45,
-          h: window.innerHeight - 20 - 130,
+          h: window.innerHeight- 20 - 130,
           x: window.innerWidth - window.innerWidth * 0.45 - 10,
           y: 10,
         }}
       >
         <PreviewBox></PreviewBox>
-      </AlwaysHereWindow>
+      </AlwaysHereWindow> */}
 
       <ModulesSet></ModulesSet>
 
@@ -442,32 +443,32 @@ export function TaskBarSet() {
     );
   };
 
-  let relayoutAll = async () => {
-    await relayoutEditor();
-    await relayoutPreview();
+  // let relayoutAll = async () => {
+  //   await relayoutEditor();
+  //   // await relayoutPreview();
 
-    window.dispatchEvent(
-      new CustomEvent("reload-all-module-winbox", { detail: {} })
-    );
-  };
+  //   window.dispatchEvent(
+  //     new CustomEvent("reload-all-module-winbox", { detail: {} })
+  //   );
+  // };
 
   let relayoutEditor = async () => {
     await resetWindow("Main Editor", {
       x: 10,
       y: 10,
-      w: window.innerWidth * 0.5 - 10 - 10 - 10,
-      h: window.innerHeight - 20 - 130,
+      w: window.innerWidth * 1.0 - 10 - 10,
+      h: window.innerHeight - 20 - 110,
     });
   };
 
-  let relayoutPreview = async () => {
-    await resetWindow("Preview Box", {
-      w: window.innerWidth * 0.5 - 20,
-      h: window.innerHeight - 20 - 130,
-      x: window.innerWidth - (window.innerWidth * 0.5 - 10) - 10,
-      y: 10,
-    });
-  };
+  // let relayoutPreview = async () => {
+  //   await resetWindow("Preview Box", {
+  //     w: window.innerWidth * 0.5 - 20,
+  //     h: window.innerHeight - 20 - 130,
+  //     x: window.innerWidth - (window.innerWidth * 0.5 - 10) - 10,
+  //     y: 10,
+  //   });
+  // };
 
   useEffect(() => {
     let reloadModWins = () => {
@@ -500,7 +501,7 @@ export function TaskBarSet() {
         "absolute bottom-0 left-0 w-full bg-opacity-25 bg-black h-12 p-2"
       }
     >
-      <TaskBtn onClick={relayoutAll}>Relayout Windows</TaskBtn>
+      {/* <TaskBtn onClick={relayoutAll}>Relayout Windows</TaskBtn> */}
 
       {modWins
         .slice()

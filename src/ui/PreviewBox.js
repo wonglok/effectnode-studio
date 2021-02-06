@@ -13,13 +13,21 @@ export function PreviewBox() {
     let streamState = () => {
       if (webview.current) {
         try {
-          webview.current.executeJavaScript(`
-            if (window.StreamInput) {
-              window.StreamInput(${JSON.stringify(lowdb.getState())});
-            } else {
-              console.log('window.StreamInput not found');
-            }
-          `);
+          webview.current.contentWindow.postMessage(
+            {
+              type: "stream-input",
+              args: lowdb.getState(),
+            },
+            "*"
+          );
+
+          // webview.current.executeJavaScript(`
+          //   if (window.StreamInput) {
+          //     window.StreamInput(${JSON.stringify(lowdb.getState())});
+          //   } else {
+          //     console.log('window.StreamInput not found');
+          //   }
+          // `);
         } catch (e) {
           console.log(e);
         }
@@ -57,6 +65,14 @@ export function PreviewBox() {
 
   useEffect(() => {
     let logger = (e) => {
+      if (e.data.type && ["error", "log"].includes(e.data.type)) {
+      } else if (e.data.type === "request-input-stream") {
+        window.dispatchEvent(
+          new CustomEvent("stream-state-to-webview", { detail: {} })
+        );
+        return;
+      }
+
       if (!webview.current) {
         return;
       }
@@ -73,7 +89,7 @@ export function PreviewBox() {
 
         let data = { type: "log", args: [] };
         try {
-          let temp = JSON.parse(e.data);
+          let temp = e.data;
           if (temp.type) {
             data.type = temp.type;
           }
@@ -94,7 +110,11 @@ export function PreviewBox() {
           }
         };
 
-        let logMsg = data.args.join(", ");
+        let logMsg = "";
+
+        if (data.args.join) {
+          logMsg = data.args.join(", ");
+        }
 
         let div = document.createElement("div");
         div.innerHTML = `<div
@@ -116,9 +136,14 @@ export function PreviewBox() {
       // }
     };
 
+    let logPacking = ({ detail }) => {
+      logger({ data: { type: "log", args: detail.args } });
+    };
     window.addEventListener("reload-page", resetLogs);
     window.addEventListener("message", logger, false);
+    window.addEventListener("log-packing", logPacking);
     return () => {
+      window.removeEventListener("log-packing", logPacking);
       window.removeEventListener("reload-page", resetLogs);
       window.removeEventListener("message", logger, false);
     };
@@ -127,6 +152,7 @@ export function PreviewBox() {
   return (
     <div className="h-full w-full">
       <iframe
+        title={"lovelove"}
         ref={webview}
         style={{ height: "calc(100% - 250px)", width: "100%" }}
       ></iframe>

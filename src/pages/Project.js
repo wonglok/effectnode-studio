@@ -4,8 +4,9 @@ import { useLocation } from "react-router-dom";
 import { makeUseWinBoxStore } from "../core/winbox.js";
 import { WindowBox } from "../ui/WindowBox.js";
 import slugify from "slugify";
-import { runServer } from "../core/server.js";
+import { runSocket } from "../core/socket.js";
 import { useBoxes } from "../core/codebox.js";
+// import { runServer } from "../core/server.js";
 // let electron = window.require('electron');
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -58,32 +59,60 @@ export function Project() {
   const root = decodeURIComponent(query.get("url"));
   const slug = slugger(root);
   const useWinBox = makeUseWinBoxStore(slug);
-  const [server, setServer] = useState(false);
+
+  const [socket, setSocket] = useState(false);
+  // const [server, setServer] = useState(false);
+
   const db = getLowDB({ projectRoot: root });
   const boxesUtil = useBoxes({ db, root });
 
   useEffect(() => {
     let clean = () => {};
-
-    runServer({
+    runSocket({
+      slug,
+      lowdb: db,
       projectRoot: root,
       onReady: (v) => {
-        setServer(v);
+        setSocket(v);
       },
     }).then((c) => {
       clean = c;
     });
-
     return () => {
       clean();
     };
-  }, [root]);
+  }, [root, db, slug]);
+
+  // useEffect(() => {
+  //   let clean = () => {};
+  //   runServer({
+  //     slug,
+  //     lowdb: db,
+  //     projectRoot: root,
+  //     onReady: (v) => {
+  //       setServer(v);
+  //     },
+  //   }).then((c) => {
+  //     clean = c;
+  //   });
+  //   return () => {
+  //     clean();
+  //   };
+  // }, [root, db, slug]);
 
   return (
     <Layout title={"Project Editor"}>
       <div style={{ height: "calc(100% - 60px)" }} className="">
         <ProjectContext.Provider
-          value={{ root, slug, useWinBox, server, lowdb: db, boxesUtil }}
+          value={{
+            root,
+            slug,
+            useWinBox,
+            socket,
+            // server,
+            lowdb: db,
+            boxesUtil,
+          }}
         >
           <div className={"h-full w-full relative"}>
             <WindowBox></WindowBox>

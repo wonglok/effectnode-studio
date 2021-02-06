@@ -150,7 +150,7 @@ function UserData({ box, win }) {
   let send = () => {
     boxesUtil.updateBox({ box });
     // window.dispatchEvent(new CustomEvent("save-state-now"));
-    // window.dispatchEvent(new CustomEvent("try-save-state"));
+    window.dispatchEvent(new CustomEvent("try-save-state"));
     // window.dispatchEvent(new CustomEvent("stream-state-to-webview"));
   };
 
